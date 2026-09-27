@@ -1,0 +1,51 @@
+{
+  "name": "styled-by-sika",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --hostname 0.0.0.0",
+    "build": "next build",
+    "start": "next start --hostname 0.0.0.0",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "demo:build": "NEXT_PUBLIC_DEMO_MODE=true NEXT_DIST_DIR=.next-demo next build",
+    "demo": "NEXT_PUBLIC_DEMO_MODE=true NEXT_DIST_DIR=.next-demo next start --hostname 127.0.0.1 --port 3002",
+    "test:e2e": "playwright test",
+    "db:seed": "node --experimental-strip-types scripts/supabase-seed.mjs",
+    "check:launch": "node --experimental-strip-types scripts/check-launch.mjs",
+    "test:unit": "vitest run"
+  },
+  "dependencies": {
+    "@fontsource-variable/dm-sans": "^5.3.0",
+    "@fontsource-variable/fraunces": "^5.3.0",
+    "@hookform/resolvers": "^5.2.0",
+    "@supabase/ssr": "^0.7.0",
+    "@supabase/supabase-js": "^2.57.0",
+    "@upstash/ratelimit": "^2.0.6",
+    "@upstash/redis": "^1.35.0",
+    "date-fns": "^4.1.0",
+    "date-fns-tz": "^3.2.0",
+    "framer-motion": "^12.23.0",
+    "google-auth-library": "^10.3.0",
+    "lucide-react": "^0.468.0",
+    "next": "^15.5.12",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "react-hook-form": "^7.62.0",
+    "resend": "^6.0.0",
+    "server-only": "^0.0.1",
+    "zod": "^4.1.0"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
+    "@electric-sql/pglite": "^0.5.8",
+    "@playwright/test": "^1.55.0",
+    "@tailwindcss/postcss": "^4.1.0",
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "tailwindcss": "^4.1.0",
+    "typescript": "^5.9.0",
+    "vitest": "^3.2.0"
+  }
+}

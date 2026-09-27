@@ -1,0 +1,25 @@
+# Dependencies
+node_modules/
+
+# Next.js build output (demo and live builds use separate folders)
+.next/
+.next-demo/
+.next-live/
+out/
+
+# Environment: only the example is committed
+.env*
+!.env.example
+
+# Tooling output
+*.tsbuildinfo
+playwright-report/
+test-results/
+coverage/
+*.log
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
