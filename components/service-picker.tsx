@@ -2,14 +2,16 @@
 
 import { useState } from 'react';
 import { Check, ChevronDown, Clock3 } from 'lucide-react';
-import { categories, extraGroups } from '@/lib/menu';
+import { extraGroups } from '@/lib/menu';
+import type { Category } from '@/lib/content';
 import { durationLabel, durationRange, extraLine, money, priceLabel, quote, splitName } from '@/lib/pricing';
 import type { Catalog, Selection, Service } from '@/lib/types';
 
 // A menu-style chooser instead of a native dropdown: pick a category, then a service.
-export function ServicePicker({ catalog: c, value: s, onChange }: { catalog: Catalog; value: Selection; onChange: (s: Selection) => void }) {
+export function ServicePicker({ catalog: c, categories, value: s, onChange }: { catalog: Catalog; categories: Category[]; value: Selection; onChange: (s: Selection) => void }) {
   const service = c.services.find(x => x.id === s.service);
-  const [choosing, setChoosing] = useState(!service);
+  // The chooser shows whenever nothing is picked yet (the link's service may arrive after mount) or she asks to change.
+  const [choosing, setChoosing] = useState(false);
   const [openCategory, setOpenCategory] = useState<string | null>(service?.category ?? null);
   function pick(x: Service) { onChange({ ...s, service: x.id }); setChoosing(false); }
   return <div className="service-picker">
@@ -63,7 +65,7 @@ function PickedService({ service }: { service: Service }) {
   </>;
 }
 
-export function QuoteSummary({ catalog, selection }: { catalog: Catalog; selection: Selection }) {
+export function QuoteSummary({ catalog, selection, depositNote }: { catalog: Catalog; selection: Selection; depositNote: string }) {
   if (!selection.service) return <div className="quote-summary"><div className="eyebrow">YOUR APPOINTMENT</div><p className="muted">Choose a service to see the price and time.</p></div>;
   let q;
   try { q = quote(catalog, selection); } catch (error) { return <div className="notice" role="status">{(error as Error).message}</div>; }
@@ -72,6 +74,6 @@ export function QuoteSummary({ catalog, selection }: { catalog: Catalog; selecti
     <div className="quote-lines">{q.breakdown.map((l, i) => <div key={i}><span>{l.label}</span><span>{priceLabel(l)}</span></div>)}</div>
     <div className="quote-total"><span>Estimated total</span><strong>{q.estimate}</strong></div>
     <p className="duration"><Clock3 size={17} aria-hidden="true" /> {q.service.duration_max_min ? `About ${durationRange(q.service)}` : `About ${durationLabel(q.duration)}`} in the chair{q.extras.length ? ', plus any extras' : ''}</p>
-    <p className="quote-bottom">CA$20 non-refundable deposit to secure your appointment. It goes toward your balance. Pay by cash or e-transfer.</p>
+    <p className="quote-bottom">{depositNote}</p>
   </div>;
 }

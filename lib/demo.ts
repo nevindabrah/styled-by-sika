@@ -59,3 +59,12 @@ export function readDemoBookings(): Booking[] {
 }
 export function saveDemoBookings(bookings: Booking[]) { sessionStorage.setItem(storageKey, JSON.stringify(bookings)); }
 export function addDemoBooking(booking: Booking) { saveDemoBookings([booking, ...readDemoBookings()]); }
+
+// Demo website content: everything the editor changes, kept in this browser tab.
+const contentKey = 'styled-by-sika-demo-content';
+export function readDemoContent<T>(fallback: T): T {
+  if (typeof window === 'undefined') return fallback;
+  try { const saved = sessionStorage.getItem(contentKey); return saved ? JSON.parse(saved) : fallback; } catch { return fallback; }
+}
+export function saveDemoContent(content: unknown) { sessionStorage.setItem(contentKey, JSON.stringify(content)); }
+export function clearDemoContent() { sessionStorage.removeItem(contentKey); }

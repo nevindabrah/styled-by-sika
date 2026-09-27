@@ -1,8 +1,7 @@
 import Image from 'next/image';
 import { braiderProfile, braiderFirstName } from '@/lib/braider-profile';
-import { welcome } from '@/lib/business';
 
-export function BraiderIntro() {
+export function BraiderIntro({ title, body }: { title: string; body: string }) {
   return (
     <aside id="meet-sika" className="braider-intro" aria-labelledby="braider-intro-heading">
       <div className="braider-portrait"><div className="braider-portrait-inner">
@@ -18,8 +17,8 @@ export function BraiderIntro() {
       </div>
       <div className="braider-intro-copy">
         <div className="eyebrow">MEET YOUR BRAIDER</div>
-        <h2 id="braider-intro-heading">{welcome.title}</h2>
-        <p>{welcome.body}</p>
+        <h2 id="braider-intro-heading">{title}</h2>
+        <p>{body}</p>
       </div>
     </aside>
   );

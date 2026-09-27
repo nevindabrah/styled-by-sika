@@ -242,7 +242,7 @@ test('theme toggle persists across navigation and reload on mobile and desktop',
 test('the braider controls which times clients can book from her dashboard', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/demo/admin');
-  await page.getByRole('button', { name: 'Settings', exact: true }).click();
+  await page.getByRole('button', { name: 'Availability', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Your availability' })).toBeVisible();
   // Close Saturday and shorten every other day to 10:00–14:00.
   await page.getByRole('checkbox', { name: 'Saturday' }).uncheck();
@@ -276,4 +276,61 @@ test('the braider controls which times clients can book from her dashboard', asy
   const labels = await page.getByRole('button', { name: /^\d{1,2}:\d{2} [AP]M$/ }).allTextContents();
   expect(labels[0]).toBe('10:00 AM');
   expect(labels.at(-1)).toBe('12:00 PM'); // last 2-hour start before a 2:00 PM close
+});
+
+test('the braider can change words, prices, services and photos from her dashboard', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/demo/admin');
+  await page.getByRole('button', { name: 'Website', exact: true }).click();
+  // Text
+  await page.getByRole('tab', { name: 'Text' }).click();
+  await page.getByLabel('Services line under your name').fill('Knotless, boho, locs and more.');
+  await page.getByLabel('Deposit amount (CA$)').fill('25');
+  await page.getByRole('button', { name: 'Save text' }).click();
+  await expect(page.getByRole('status')).toContainText('Text saved');
+  // Menu: change a price, add a service, add a category
+  await page.getByRole('tab', { name: 'Menu' }).click();
+  const knotless = page.locator('.editor-group', { hasText: 'Knotless braids' }).first();
+  await knotless.locator('.editor-row').first().getByRole('button', { name: 'Edit' }).click();
+  const form = page.getByRole('form', { name: 'Edit Large Knotless Braids — Standard Back Length' });
+  await form.getByLabel('Price (CA$)').fill('130');
+  await form.getByRole('button', { name: 'Save service' }).click();
+  await expect(page.getByRole('status')).toContainText('Service saved');
+  await page.locator('.editor-group-head', { hasText: /^Twists/ }).click();
+  await page.getByRole('button', { name: 'Add a service to Twists' }).click();
+  const add = page.getByRole('form', { name: 'New service' });
+  await add.getByLabel('Service name').fill('Passion Twists');
+  await add.getByLabel('Length or size (optional)').fill('Mid-Back Length');
+  await add.getByLabel('Price (CA$)').fill('140');
+  await add.getByLabel('Hair the client should bring').fill('3 packs of passion twist hair.');
+  await add.getByRole('button', { name: 'Add service' }).click();
+  await expect(page.getByRole('status')).toContainText('added to the menu');
+  await page.getByLabel('New category name').fill('Cornrows');
+  await page.getByRole('button', { name: 'Add category' }).click();
+  await expect(page.getByRole('status')).toContainText('Category "Cornrows" added');
+  // Hide the Soft locs category
+  await page.locator('.editor-row', { hasText: 'Soft locs' }).getByRole('button', { name: 'Hide' }).click();
+  // Photos: upload one for Twists
+  await page.getByRole('tab', { name: 'Photos' }).click();
+  const twists = page.getByRole('region', { name: 'Twists photos' });
+  await twists.getByLabel('Describe the photo (for screen readers and search)').fill('Passion twists from the back');
+  await twists.getByLabel('Add a photo to Twists').setInputFiles('public/images/styles/boho/boho-01.jpg');
+  await expect(page.getByRole('status')).toContainText('Photo added');
+  await expect(twists.locator('.photo-item')).toHaveCount(1);
+  // The public site reflects every change in this tab.
+  await page.goto('/');
+  await expect(page.locator('.hero-services')).toHaveText('Knotless, boho, locs and more.');
+  await expect(page.locator('.hero-facts')).toContainText('CA$25 deposit');
+  await page.locator('#menu-knotless').getByRole('button').click();
+  await expect(page.locator('#large-knotless-standard')).toContainText('CA$130');
+  await page.locator('#menu-twists').getByRole('button').click();
+  await expect(page.locator('#menu-twists')).toContainText('Passion Twists');
+  await expect(page.locator('#menu-twists')).toContainText('3 packs of passion twist hair.');
+  await expect(page.locator('#menu-twists .work-photos img')).toHaveCount(1);
+  await expect(page.locator('#menu-soft-locs')).toHaveCount(0);
+  await expect(page.locator('#menu-cornrows')).toHaveCount(0); // empty categories stay off the menu
+  // Booking picks up the new service and the new deposit note.
+  await page.goto('/book?service=passion-twists-mid-back-length');
+  await expect(page.locator('.picked-service')).toContainText('Passion Twists');
+  await expect(page.locator('.quote-total strong')).toHaveText('CA$140');
 });

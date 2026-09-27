@@ -25,7 +25,7 @@ The public site is one page plus a booking page. Old links (`/pricing`, `/styles
 - `/` — welcome, the service menu (tap a category to open its options, each with price, time, hair needed and a Book button), add-ons, booking policies, and contact. Phones and tablets get a floating Book bar whenever no other Book button is on screen.
 - `/book?service=<slug>&extras=<slug,slug>` — the booking page, pre-filled from the menu. When online booking is off, it shows the price and sends the request to Sika by Instagram DM or email with the details filled in.
 
-Everything Sika wrote lives in two files: `lib/menu.ts` (services, durations, prices, hair, add-ons) and `lib/business.ts` (welcome, deposit, payment, cancellation, hair prep, contact). Edit those to change the website.
+Sika edits the website herself from her dashboard (`/admin` → Website and Availability): text, categories, services and prices, add-ons, photos, weekly hours and blocked dates. `docs/OWNER-GUIDE.md` is her manual. The files `lib/menu.ts`, `lib/business.ts` and `lib/work-photos.ts` hold the defaults that seed the database.
 
 ## Demo walkthrough
 
@@ -33,7 +33,7 @@ Everything Sika wrote lives in two files: `lib/menu.ts` (services, durations, pr
 2. Add an extra, then choose a sample day/time. Enter a sample name, phone, and an `example.com` email. Agree to the policies, review, and confirm.
 3. Download the sample calendar file or open the demo dashboard from the confirmation screen.
 4. In the dashboard, open Bookings and find the sample client. Mark a deposit paid, save a private note, or cancel with confirmation.
-5. Open Settings to change the weekly hours or block a day, then start another booking: only the times she allows appear, and any booked appointment (plus her 30-minute break) is gone from the calendar.
+5. Open Website to change a price, add a service, edit the welcome text or upload a photo, then reload the site to see it. Open Availability to change the weekly hours or block a day, then start another booking: only the times she allows appear, and any booked appointment (plus her 30-minute break) is gone from the calendar.
 
 Demo bookings are stored in browser session storage and last for that tab's session. They never create Google Calendar events, send emails, or collect deposits. Appointment times and sample clients are demonstration data; prices are Sika's real menu.
 

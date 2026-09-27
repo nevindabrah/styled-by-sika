@@ -4,16 +4,16 @@
 
 1. Create Sika's Supabase project. The owner should retain access to the account.
 2. In the project's SQL Editor, run `supabase/schema.sql` once on a fresh project. On an existing project, do not re-run the initial schema.
-3. Apply `supabase/migrations/002_launch_settings.sql`, `003_service_menu.sql`, `004_duration_ranges.sql` and `005_time_off.sql` in order, to both new and existing projects. Migration 003 turns the old style/length/size grid into Sika's flat service menu (services stay in `styles`, add-ons in `addons`).
+3. Apply `supabase/migrations/002_launch_settings.sql`, `003_service_menu.sql`, `004_duration_ranges.sql`, `005_time_off.sql` and `006_site_content.sql` in order, to both new and existing projects. Migration 003 turns the old style/length/size grid into Sika's flat service menu (services stay in `styles`, add-ons in `addons`).
 4. Add the project URL, anon/publishable key and server service-role/secret key to `.env.local` using the variable names in `.env.example`. Never put the server key in a `NEXT_PUBLIC_` variable.
-5. Run `npm run db:seed`. This inserts Sika's menu from `lib/menu.ts`, the CA$20 deposit text, business settings and seven closed weekdays. It never overwrites existing rows or adds fake bookings.
-6. Sika sets her weekly hours and blocked dates herself at `/admin/settings` once she can sign in (saving hours also marks `hours_confirmed`). In Supabase's Table Editor, review `styles`, `addons` and `business_settings`. Monetary values are integer Canadian cents. Prices already match the menu Sika supplied; the website reads them from `lib/menu.ts` until Supabase is connected, and from the database afterwards.
+5. Run `npm run db:seed`. This creates the public `photos` storage bucket and inserts Sika's menu, categories, photos, website text, deposit, business settings and seven closed weekdays. It never overwrites rows she has edited or adds fake bookings.
+6. Sika edits everything else herself once she can sign in: prices, services, categories, add-ons, photos and text at `/admin/content`, hours and blocked dates at `/admin/settings` (saving hours also marks `hours_confirmed`). Give her `docs/OWNER-GUIDE.md`. Nothing needs Supabase Studio after seeding. Monetary values are integer Canadian cents. Prices already match the menu Sika supplied; the website reads them from `lib/menu.ts` until Supabase is connected, and from the database afterwards.
 7. Enter `deposit_cents`, `deposit_instructions`, `cancellation_policy`, `lateness_policy` and `guest_policy`. Approve `prices_confirmed`, `hours_confirmed` and `policies_confirmed` only after Sika agrees to those values. All seven weekdays must exist; use null opening and closing times for closed days.
 8. Create the braider's user in Supabase Auth and set `ADMIN_EMAIL` to that address. Only that email can open `/admin` (middleware and every admin API check it); clients never see the dashboard. Set and set the production site URL and `/auth/callback` redirect in Supabase Auth settings. Add the same credentials to the hosting environment.
 
 The app reads the catalog, working hours, settings, bookings, jobs, FAQs and gallery records from Supabase when configured. Bookings use server routes with a service key; browser roles have no access to appointment records or operational settings. The authenticated admin dashboard manages bookings. Use Supabase Studio for catalog, hours and policies.
 
-For gallery uploads, create a public Storage bucket named `gallery`, upload approved photos through Studio, then add their bucket-relative paths to `gallery_images.storage_path`. Public reading of these images is intentional. Do not allow anonymous uploads. Booking records and customer information must never go in this bucket. Until database gallery rows exist, the existing local photos are used.
+Photos she uploads from the dashboard go to the public `photos` bucket (created by the seed) through the server with the service key; anonymous uploads are not possible. Booking records and customer information must never go in this bucket.
 
 ## Calendar, email and request protection
 

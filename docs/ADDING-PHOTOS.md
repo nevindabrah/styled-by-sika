@@ -1,5 +1,7 @@
 # Add photos to a menu category
 
+**Sika adds photos herself** in the dashboard: Website → Photos → *Add a photo to …* (see `docs/OWNER-GUIDE.md`). The steps below only change the built-in defaults used before the database is connected.
+
 The two supplied knotless photos are saved in `public/images/styles/knotless/` and listed in `lib/work-photos.ts`. Photos appear next to the matching category heading in the service menu.
 
 1. Copy the new photo into `public/images/styles/knotless/`, for example `knotless-03.jpeg`.

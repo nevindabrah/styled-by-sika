@@ -7,9 +7,9 @@ import { ChevronDown, Clock3 } from 'lucide-react';
 import { extraGroups } from '@/lib/menu';
 import { durationRange, extraLine, money, priceLabel, splitName } from '@/lib/pricing';
 import type { Extra, Service } from '@/lib/types';
-import type { WorkPhoto } from '@/lib/work-photos';
+import type { Photo } from '@/lib/content';
 
-export type MenuGroup = { slug: string; label: string; services: Service[]; photos: WorkPhoto[] };
+export type MenuGroup = { slug: string; label: string; services: Service[]; photos: Photo[] };
 
 // Categories start closed; tapping one reveals its options. Every option stays in the page (hidden, not removed)
 // so links, search engines and the floating Book bar can still find them.
@@ -44,7 +44,7 @@ export function MenuAccordion({ groups, extras, showPrices }: { groups: MenuGrou
           </button>
         </h3>
         <div id={`panel-${g.slug}`} className="menu-row-body" hidden={!expanded}>
-          {g.photos.length > 0 && <div className="work-photos">{g.photos.map(p => <Image key={p.url} src={p.url} alt={p.alt} width={p.width} height={p.height} sizes="(max-width:700px) 40vw, 150px" unoptimized />)}{g.photos.every(p => p.own) && <small>Braided by Sika</small>}</div>}
+          {g.photos.length > 0 && <div className="work-photos">{g.photos.map(p => <Image key={p.id} src={p.url} alt={p.alt} width={p.width} height={p.height} sizes="(max-width:700px) 40vw, 150px" unoptimized />)}{g.photos.every(p => p.own) && <small>Braided by Sika</small>}</div>}
           <div className="menu-list">{g.services.map(s => <ServiceItem key={s.id} service={s} showPrices={showPrices} />)}</div>
         </div>
       </section>;

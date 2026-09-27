@@ -15,9 +15,11 @@ npm run dev        # development server; open the port it prints
 
 | Change | File |
 | --- | --- |
-| Services, prices, durations, hair needed, add-ons | `lib/menu.ts` |
-| Welcome, deposit, payment, cancellation, hair prep, contact | `lib/business.ts` |
-| Photos shown beside each menu category | `lib/work-photos.ts` + `public/images/styles/<category>/` |
+| Content model, validation and the edit operations | `lib/content.ts` |
+| Default services, prices, add-ons (seed) | `lib/menu.ts` |
+| Default welcome, policies, contact (seed) | `lib/business.ts` |
+| Default photos (seed) | `lib/work-photos.ts` + `public/images/styles/<category>/` |
+| Dashboard website editor | `components/content-editor.tsx`, `app/api/admin/content/route.ts` |
 | Landing page sections | `app/(site)/page.tsx` |
 | Booking flow | `components/booking-flow.tsx`, `components/service-picker.tsx` |
 | Availability rules (hours, buffer, conflicts) | `lib/availability.ts`, `lib/live-availability.ts` |

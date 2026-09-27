@@ -14,6 +14,10 @@ Header shows three section links plus Book now (chips row on phones). Categories
 
 Demo mode is explicit in production (`NEXT_PUBLIC_DEMO_MODE=true`) and automatic in development when no Supabase URL is configured. Sample appointments persist in sessionStorage. The dedicated `/demo/admin` screen never exposes real bookings. Real `/admin` retains middleware/session protections. Demo booking/contact actions never call live services.
 
+## Editable website (September 2026)
+
+Everything public is rendered from `SiteContent` (`lib/content.ts`): categories, services, add-ons, photos and text. Defaults come from `lib/menu.ts`, `lib/business.ts`, `lib/work-photos.ts`; live data from Supabase tables `categories`, `styles`, `addons`, `style_photos`, `site_content` (migration 006) and the `photos` storage bucket. `getContent()` in `lib/db.ts` is the single read; `/api/admin/content` (PATCH, admin only) applies `ContentOp`s via `applyContentOp`, the same pure function the demo uses with sessionStorage (`readDemoContent`). Public pages are client components (`LandingPage`, `Header`, `Footer`, `BookingFlow`) that layer demo edits via `useSiteContent`. The editor is `components/content-editor.tsx` (tabs Text · Menu · Add-ons · Photos) at `/admin/content` and in the demo dashboard's Website tab. Photos are resized in the browser (`lib/resize-image.ts`) before upload. The owner's guide is `docs/OWNER-GUIDE.md`.
+
 ## Availability and the dashboard
 
 Available start times = her weekly hours (`working_hours`) minus Google Calendar busy time, existing bookings (each blocks its full length plus the 30-minute buffer) and one-off `time_off` blocks. `lib/availability.ts#slotsForDay` is the single rule set; the demo uses it too with hours/blocks kept in sessionStorage, so a 3.5-hour demo booking at 9:00 removes every start before 1:00 PM. Sika edits hours and blocked times in `/admin/settings` (`components/availability-editor.tsx`, `/api/admin/availability`); the demo dashboard's Settings tab shows the same editor. Access is by login: only `ADMIN_EMAIL` passes `requireAdmin`/middleware.

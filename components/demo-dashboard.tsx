@@ -6,6 +6,9 @@ import { useEffect, useState } from 'react';
 import { formatInTimeZone } from 'date-fns-tz';
 import { readDemoBookings, saveDemoBookings, sampleBookings, readDemoAvailability, saveDemoAvailability, sampleAvailability, demoTimezone, demoBuffer, type DemoAvailability } from '@/lib/demo';
 import { AvailabilityEditor } from './availability-editor';
+import { ContentEditor } from './content-editor';
+import { applyContentOp, defaultContent, type ContentOp, type SiteContent } from '@/lib/content';
+import { readDemoContent, saveDemoContent, clearDemoContent } from '@/lib/demo';
 import { durationLabel, money, priceLabel } from '@/lib/pricing';
 import type { Booking } from '@/lib/types';
 
@@ -22,7 +25,9 @@ export function DemoDashboard() {
   const [reason, setReason] = useState('');
   const [message, setMessage] = useState('');
   const [availability, setAvailability] = useState<DemoAvailability>(sampleAvailability);
-  useEffect(() => { setBookings(readDemoBookings()); setAvailability(readDemoAvailability()); setLoaded(true); }, []);
+  const [content, setContent] = useState<SiteContent>(defaultContent);
+  useEffect(() => { setBookings(readDemoBookings()); setAvailability(readDemoAvailability()); setContent(readDemoContent(defaultContent())); setLoaded(true); }, []);
+  async function applyContent(op: ContentOp) { const result = applyContentOp(content, op, () => crypto.randomUUID()); saveDemoContent(result.content); setContent(result.content); return result.message; }
   function persistAvailability(next: DemoAvailability) { saveDemoAvailability(next); setAvailability(next); }
   const booking = bookings.find(b => b.id === selected);
   const now = Date.now(), today = formatInTimeZone(now, 'America/Toronto', 'yyyy-MM-dd'), month = today.slice(0, 7);
@@ -41,7 +46,7 @@ export function DemoDashboard() {
     </button>) : <p className="empty-state">No appointments in this view.</p>;
   }
   return <>
-    <header className="admin-header"><Link href="/" className="wordmark">styled<span>by Sika</span></Link><nav className="admin-nav" aria-label="Demo dashboard">{['Today','Bookings','Clients','Settings'].map(t => <button key={t} className={`chip ${tab === t ? 'selected' : ''}`} aria-pressed={tab === t} onClick={() => { setTab(t); setSelected(null); }}>{t}</button>)}<Link className="text-link" href="/">Back to website</Link></nav></header>
+    <header className="admin-header"><Link href="/" className="wordmark">styled<span>by Sika</span></Link><nav className="admin-nav" aria-label="Demo dashboard">{['Today','Bookings','Clients','Website','Availability'].map(t => <button key={t} className={`chip ${tab === t ? 'selected' : ''}`} aria-pressed={tab === t} onClick={() => { setTab(t); setSelected(null); }}>{t}</button>)}<Link className="text-link" href="/">Back to website</Link></nav></header>
     <aside className="demo-banner"><span><strong>Demo dashboard</strong> · Sample appointments, saved only in this browser tab.</span><Link href="/book">Try the booking flow ↗</Link></aside>
     <main id="main" className="admin-main">
       {!loaded ? <p role="status">Loading sample appointments…</p> : booking ? <>
@@ -58,7 +63,7 @@ export function DemoDashboard() {
         <h2 className="small-heading">Private note</h2><label className="field-label" htmlFor="demo-note">Only visible in the dashboard</label><textarea id="demo-note" value={note} onChange={e => setNote(e.target.value)} maxLength={3000}/><button className="button button-outline" style={{marginTop:12}} onClick={() => update()}>Save private note</button>
         {message && <p className="status-message" role="status">{message}</p>}
       </> : <>
-        <div className="eyebrow">STYLED BY SIKA · DEMO</div><h1 className="page-title">{tab === 'Today' ? <>Hi, <em>{braiderFirstName}.</em></> : tab}</h1>
+        <div className="eyebrow">STYLED BY SIKA · DEMO</div><h1 className="page-title">{tab === 'Today' ? <>Hi, <em>{braiderFirstName}.</em></> : tab === 'Website' ? <>Edit your <em>website.</em></> : tab}</h1>
         {tab === 'Today' && <>
           <div className="stat-grid"><div className="stat"><strong>{bookings.filter(b => b.status === 'pending_deposit').length}</strong><span>Awaiting deposit</span></div><div className="stat"><strong>{monthly.filter(b=>b.status!=='cancelled').length}</strong><span>Bookings this month</span></div><div className="stat"><strong>{money(monthly.filter(b=>['confirmed','completed'].includes(b.status)).reduce((n,b)=>n+b.price_cents,0))}</strong><span>Confirmed & completed</span></div></div>
           <h2 className="small-heading">Today</h2>{rows(bookings.filter(b => formatInTimeZone(b.start_at,'America/Toronto','yyyy-MM-dd') === today && b.status !== 'cancelled'))}
@@ -66,11 +71,12 @@ export function DemoDashboard() {
         </>}
         {tab === 'Bookings' && <><div className="chips">{['Upcoming','Awaiting deposit','Past','Cancelled'].map(f => <button key={f} className={`chip ${filter===f?'selected':''}`} aria-pressed={filter===f} onClick={()=>setFilter(f)}>{f}{f==='Awaiting deposit'?` (${bookings.filter(b=>b.status==='pending_deposit').length})`:''}</button>)}</div><label className="field-label" htmlFor="demo-search" style={{marginTop:20}}>Find a client</label><input id="demo-search" type="search" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search by name or phone"/>{rows(bookings.filter(b=>filter==='Cancelled'?b.status==='cancelled':filter==='Awaiting deposit'?b.status==='pending_deposit':filter==='Past'?new Date(b.start_at).getTime()<now&&b.status!=='cancelled':new Date(b.start_at).getTime()>=now&&b.status!=='cancelled').filter(b=>`${b.client_name} ${b.client_phone}`.toLowerCase().includes(search.toLowerCase())))}</>}
         {tab === 'Clients' && <>{Object.entries(Object.groupBy(bookings,b=>b.client_phone)).map(([phone,items])=>items&&<button className="booking-row demo-booking-row" key={phone} onClick={()=>open(items[0])}><div><strong>{items[0].client_name}</strong><p>{phone}</p></div><div>{items.filter(b=>b.status==='completed').length} completed visits<p>{[...new Set(items.map(b=>b.snapshot.style))].join(', ')}</p></div></button>)}</>}
-        {tab === 'Settings' && <><AvailabilityEditor hours={availability.hours} timeOff={availability.timeOff} timezone={demoTimezone} buffer={demoBuffer}
+        {tab === 'Website' && <ContentEditor content={content} onApply={applyContent} />}
+        {tab === 'Availability' && <><AvailabilityEditor hours={availability.hours} timeOff={availability.timeOff} timezone={demoTimezone} buffer={demoBuffer}
           onSaveHours={async hours => persistAvailability({ ...availability, hours })}
           onAddTimeOff={async block => persistAvailability({ ...availability, timeOff: [...availability.timeOff, { id: crypto.randomUUID(), ...block }].sort((a, b) => a.start_at.localeCompare(b.start_at)) })}
           onRemoveTimeOff={async id => persistAvailability({ ...availability, timeOff: availability.timeOff.filter(t => t.id !== id) })} />
-          <h2 className="small-heading">Business details</h2><p className="notice">Text David to change these. In this demo, your hours and blocked times are saved in this browser tab only.</p><dl className="review-list"><dt>Business</dt><dd>Styled by Sika</dd><dt>Location</dt><dd>Vaughan, Ontario</dd><dt>Timezone</dt><dd>America/Toronto</dd><dt>Deposit</dt><dd>CA$20, non-refundable</dd><dt>Payment</dt><dd>Cash or e-transfer</dd><dt>Time between clients</dt><dd>30 minutes</dd><dt>Booking window</dt><dd>24 hours to 60 days ahead</dd></dl><button className="button button-outline" onClick={()=>{persist(sampleBookings());persistAvailability(sampleAvailability());setMessage('Sample appointments and hours reset.');}}>Reset demo appointments</button>{message&&<p role="status">{message}</p>}</>}
+          <h2 className="small-heading">Business details</h2><p className="notice">Text David to change these. In this demo, your hours and blocked times are saved in this browser tab only.</p><dl className="review-list"><dt>Business</dt><dd>Styled by Sika</dd><dt>Location</dt><dd>Vaughan, Ontario</dd><dt>Timezone</dt><dd>America/Toronto</dd><dt>Deposit</dt><dd>CA$20, non-refundable</dd><dt>Payment</dt><dd>Cash or e-transfer</dd><dt>Time between clients</dt><dd>30 minutes</dd><dt>Booking window</dt><dd>24 hours to 60 days ahead</dd></dl><button className="button button-outline" onClick={()=>{persist(sampleBookings());persistAvailability(sampleAvailability());clearDemoContent();setContent(defaultContent());setMessage('Sample appointments, hours and website edits reset.');}}>Reset demo</button>{message&&<p role="status">{message}</p>}</>}
       </>}
     </main>
   </>;
