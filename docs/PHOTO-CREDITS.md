@@ -14,6 +14,12 @@ Only real photographs are permitted, per the owner's explicit instruction. No st
 
 Source and permission for these two were not stated; they appear without the "Braided by Sika" caption until confirmed as her own work (`own: true` in `lib/work-photos.ts`).
 
+- `public/images/styles/miracle-knots/miracle-knots-01.jpg` (387×516) and `miracle-knots-02.jpg` (768×1024) — miracle knots, sent by David.
+- `public/images/styles/invisible-locs/invisible-locs-01.jpg` (1199×1600, resized from 1720×2294) — invisible locs, sent by David.
+- `public/images/styles/soft-locs/soft-locs-01.jpg` (736×1308) — soft locs, sent by David.
+
+As with the 27 September knotless/boho photos, source and permission were not stated, so these show without the "Braided by Sika" caption until confirmed. Twists photos are still to come.
+
 ## Removed stock references
 
 Four Pexels reference photos (box braids, knotless, cornrows, individual braids; downloaded 17 September 2026 under the Pexels licence) were used as placeholders while the menu was unconfirmed. They were deleted on 27 September 2026 when the site was rebuilt around Sika's own menu, so nothing on the site is labelled with a style it does not show. Add her own photos for boho, twists, invisible locs and soft locs as they become available (see `docs/ADDING-PHOTOS.md`).

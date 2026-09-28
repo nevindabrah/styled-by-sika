@@ -86,6 +86,10 @@ test('section navigation and collapsible categories work on phone and desktop', 
     await expect(page.locator('#menu-knotless .service').first()).toBeVisible();
     await expect(page.locator('#menu-knotless .work-photos img')).toHaveCount(3);
     await expect(page.locator('#menu-boho .work-photos img')).toHaveCount(1);
+    for (const [slug, count] of [['miracle-knots', 2], ['invisible-locs', 1], ['soft-locs', 1]] as const) {
+      await page.locator(`#menu-${slug}`).getByRole('button').click();
+      await expect(page.locator(`#menu-${slug} .work-photos img`)).toHaveCount(count);
+    }
     await boho.click();
     await expect(boho).toHaveAttribute('aria-expanded', 'true');
     await expect(knotless).toHaveAttribute('aria-expanded', 'false');

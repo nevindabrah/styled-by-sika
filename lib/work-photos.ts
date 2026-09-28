@@ -12,4 +12,14 @@ export const workPhotos: Record<string, WorkPhoto[]> = {
   boho: [
     { url: '/images/styles/boho/boho-01.jpg', width: 675, height: 1200, alt: 'Long boho knotless braids with loose curly strands throughout, worn down' },
   ],
+  'miracle-knots': [
+    { url: '/images/styles/miracle-knots/miracle-knots-01.jpg', width: 387, height: 516, alt: 'Miracle knots with long defined curls, shown from the side' },
+    { url: '/images/styles/miracle-knots/miracle-knots-02.jpg', width: 768, height: 1024, alt: 'Miracle knots with full, shiny curls framing the face' },
+  ],
+  'invisible-locs': [
+    { url: '/images/styles/invisible-locs/invisible-locs-01.jpg', width: 1199, height: 1600, alt: 'Invisible locs from the back, showing the neat parts and full length' },
+  ],
+  'soft-locs': [
+    { url: '/images/styles/soft-locs/soft-locs-01.jpg', width: 736, height: 1308, alt: 'Long soft locs worn down, shown from the side' },
+  ],
 };
