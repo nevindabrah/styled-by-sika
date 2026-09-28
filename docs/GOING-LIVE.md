@@ -1,6 +1,6 @@
 # Going live
 
-Only **Supabase** (database, sign-in, photo storage, scheduler) and **Vercel** (hosting) are required. The braider switches online booking on herself in her dashboard; without an email service, clients see their request on screen and she contacts them. **Resend** (emails), **Twilio** (texts), Google Calendar and Upstash are optional and can be added later without code changes.
+Only **Supabase** (database, sign-in, photo storage, scheduler) and **Vercel** (hosting) are required. Booking follows the braider's hours in her dashboard; without an email service, clients see their request on screen and she contacts them. **Resend** (emails), **Twilio** (texts), Google Calendar and Upstash are optional and can be added later without code changes.
 
 ## 1. Supabase (10 minutes)
 
@@ -47,11 +47,10 @@ The same run retries any confirmation email or text that failed.
 
 ## 5. Switch on online booking
 
-1. Sika saves her weekly hours in **Availability**, then taps **Turn on online booking** at the top of the same page.
+1. Sika saves her weekly hours in **Availability**. Booking is always on; with no hours there are simply no times to pick.
 2. Run `npm run check:launch` to confirm nothing is missing.
 3. Make a test booking on the live site: it should show *Booking request received*, appear under **Bookings**, and hold the time. Cancel it from the dashboard.
 
-While online booking is off, `/book` shows prices and lets clients send a request by text, Instagram or email with their name and preferred day filled in.
 
 ## Text messages (Twilio)
 

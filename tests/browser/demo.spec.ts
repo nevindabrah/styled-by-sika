@@ -2,6 +2,21 @@ import { braiderFirstName } from '../../lib/braider-profile';
 import { menuServices, menuExtras } from '../../lib/menu';
 import { test, expect } from '@playwright/test';
 
+// The calendar opens on the first month with free times; go to a specific month explicitly.
+async function goToMonth(page: import('@playwright/test').Page, date: Date) {
+  const target = date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  const header = page.locator('.calendar-header strong');
+  await expect(header).not.toHaveText('');
+  await expect(page.locator('.fine-print[role=status]')).not.toHaveText('Checking the calendar…');
+  for (let i = 0; i < 4 && (await header.textContent()) !== target; i++) {
+    const [m, y] = [(await header.textContent())!, target];
+    const later = new Date(`1 ${y}`) > new Date(`1 ${m}`);
+    await page.getByRole('button', { name: later ? 'Next month' : 'Previous month' }).click();
+  }
+  await expect(header).toHaveText(target);
+}
+const nextMonth = () => { const d = new Date(); d.setDate(1); d.setMonth(d.getMonth() + 1); return d; };
+
 const routes = ['/', '/book', '/book?service=large-knotless-shoulder&extras=blow-dry', '/login', '/demo/admin'];
 for (const width of [390, 768, 1440]) {
   test(`all pages load without runtime errors at ${width}px`, async ({ page }) => {
@@ -139,11 +154,15 @@ test('a service Book button opens booking with that service and the demo booking
   await page.getByLabel('Extra Length').uncheck();
   await page.getByRole('button', { name: 'Choose your time' }).click();
   // A fully open day next month (never inside the 24-hour notice window): the first start is 9:00 AM.
-  await page.getByRole('button', { name: 'Next month' }).click();
+  await goToMonth(page, nextMonth());
   const day = page.locator('.calendar-grid button:enabled').nth(1);
   const dayLabel = await day.getAttribute('aria-label');
   await day.click();
   await expect(page.getByRole('button', { name: /^\d{1,2}:\d{2} [AP]M$/ }).first()).toHaveText('9:00 AM');
+  // Start times are every 30 minutes, like Calendly.
+  const starts = (await page.getByRole('button', { name: /^\d{1,2}:\d{2} [AP]M$/ }).allTextContents()).map(t => { const [, h, m, ap] = t.match(/(\d+):(\d+) ([AP]M)/)!; return (Number(h) % 12 + (ap === 'PM' ? 12 : 0)) * 60 + Number(m); });
+  expect(starts.slice(1).map((s, i) => s - starts[i]).every(gap => gap === 30)).toBe(true);
+  await expect(page.getByText('Preferred time')).toHaveCount(0);
   await page.getByRole('button', { name: '9:00 AM', exact: true }).click();
   await page.getByRole('button', { name: 'Your details', exact: true }).click();
   await page.getByRole('button', { name: 'Review booking' }).click();
@@ -159,9 +178,9 @@ test('a service Book button opens booking with that service and the demo booking
   await expect(page.locator('.review-list')).toContainText('Blow-Dry');
   await page.getByRole('button', { name: 'Confirm booking', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Booking confirmed.' })).toBeVisible();
-  await expect(page.getByRole('heading', { name: /Send Sika your booking|Text Sika your booking/ })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /(Send|Text) your booking to Styled by Sika/ })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Send your CA$20 deposit' })).toBeVisible();
-  await expect(page.locator('.deposit-step')).toContainText('Sika will reply with where to send it');
+  await expect(page.locator('.deposit-step')).toContainText('I’ll reply with where to send it');
   await expect(page.getByLabel('Your booking message')).toHaveValue(/Reference: DEMO-/);
   await expect(page.getByLabel('Your booking message')).toHaveValue(/Name: Taylor Demo/);
   await expect(page.getByText('CA$175 · 3 hr 30 min')).toBeVisible();
@@ -183,7 +202,7 @@ test('a service Book button opens booking with that service and the demo booking
   await expect(page.getByRole('status')).toContainText('Private note saved');
   // The 3 h 30 appointment at 9:00 plus the 30-minute break blocks every start before 1:00 PM on that day.
   // (Same tab: demo bookings live in this tab's session storage; the live site reads the database.)
-  const openDay = async () => { await page.goto('/book?service=large-knotless-shoulder'); await page.getByRole('button', { name: 'Choose your time' }).click(); await page.getByRole('button', { name: 'Next month' }).click(); await page.getByRole('button', { name: dayLabel!, exact: true }).click(); return page.getByRole('button', { name: /^\d{1,2}:\d{2} [AP]M$/ }); };
+  const openDay = async () => { await page.goto('/book?service=large-knotless-shoulder'); await page.getByRole('button', { name: 'Choose your time' }).click(); await goToMonth(page, nextMonth()); await page.getByRole('button', { name: dayLabel!, exact: true }).click(); return page.getByRole('button', { name: /^\d{1,2}:\d{2} [AP]M$/ }); };
   let times = await openDay();
   await expect(times.first()).toHaveText('1:00 PM');
   await expect(page.getByRole('button', { name: '9:00 AM', exact: true })).toHaveCount(0);
@@ -276,7 +295,7 @@ test('the braider controls which times clients can book from her dashboard', asy
   // Clients now only see 10:00–14:00 starts, nothing on Saturdays or the blocked day.
   await page.goto('/book?service=natural-hair-twists');
   await page.getByRole('button', { name: 'Choose your time' }).click();
-  await page.getByRole('button', { name: 'Next month' }).click();
+  await goToMonth(page, blocked);
   await expect(page.locator('.calendar-grid button:enabled').first()).toBeVisible();
   const enabled = await page.locator('.calendar-grid button:enabled').evaluateAll(buttons => buttons.map(b => b.getAttribute('aria-label')));
   expect(enabled.length).toBeGreaterThan(10);

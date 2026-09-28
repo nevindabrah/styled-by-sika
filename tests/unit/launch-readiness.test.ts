@@ -5,9 +5,8 @@ const settings: BusinessSettings={timezone:'America/Toronto',buffer_min:30,minim
 const env={...Object.fromEntries(bookingEnvironmentKeys.map(k=>[k,'configured'])),NEXT_PUBLIC_SITE_URL:'https://example.com',NEXT_PUBLIC_DEMO_MODE:'false'};
 describe('online booking readiness',()=>{
  it('works without any email or text service', ()=>expect(bookingConfigurationIssues(settings,env)).toEqual([]));
- it('follows the braider’s own on/off switch and her hours',()=>{
-  expect(bookingConfigurationIssues({...settings,booking_open:false},env)).toContain('Online booking is switched off in the dashboard.');
-  expect(bookingConfigurationIssues({...settings,hours_confirmed:false},env)).toContain('Working hours need approval (save them once in the dashboard).');
+ it('is always on once configured; her hours decide which times exist',()=>{
+  expect(bookingConfigurationIssues({...settings,booking_open:false,hours_confirmed:false},env)).toEqual([]);
  });
  it('blocks missing credentials, settings and demo mode',()=>{
   expect(bookingConfigurationIssues(null,{})).toContain('Business settings are missing.');

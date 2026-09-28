@@ -30,9 +30,7 @@ export function bookingConfigurationIssues(settings: BusinessSettings | null, en
   catch { issues.push('Set a valid public site URL.'); }
  }
  if (!settings) return [...issues, 'Business settings are missing.'];
- if (!settings.booking_open) issues.push('Online booking is switched off in the dashboard.');
  if (!settings.prices_confirmed) issues.push('Prices need approval.');
- if (!settings.hours_confirmed) issues.push('Working hours need approval (save them once in the dashboard).');
  if (!settings.policies_confirmed) issues.push('Policies need approval.');
  if (settings.deposit_cents === null || settings.deposit_cents < 0 || !settings.deposit_instructions?.trim()) issues.push('Payment amount and instructions are required.');
  return issues;

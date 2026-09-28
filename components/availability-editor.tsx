@@ -9,14 +9,13 @@ export type BookingRules = { buffer_min: number; minimum_notice_hours: number; w
 type Props = {
   hours: WeekHours; timeOff: TimeOff[]; timezone: string; rules: BookingRules;
   onSaveRules: (rules: BookingRules) => Promise<void>;
-  bookingOpen?: boolean; onToggleBooking?: (open: boolean) => Promise<void>;
   onSaveHours: (hours: WeekHours) => Promise<void>;
   onAddTimeOff: (block: { start_at: string; end_at: string; reason: string }) => Promise<void>;
   onRemoveTimeOff: (id: string) => Promise<void>;
 };
 
 // Sika decides which times clients can book: weekly hours plus one-off blocked dates and times.
-export function AvailabilityEditor({ hours: initial, timeOff, timezone, rules: savedRules, onSaveRules, onSaveHours, onAddTimeOff, onRemoveTimeOff, bookingOpen, onToggleBooking }: Props) {
+export function AvailabilityEditor({ hours: initial, timeOff, timezone, rules: savedRules, onSaveRules, onSaveHours, onAddTimeOff, onRemoveTimeOff }: Props) {
   const [rules, setRules] = useState<BookingRules>(savedRules);
   const savedRulesKey = JSON.stringify(savedRules);
   useEffect(() => { setRules(JSON.parse(savedRulesKey)); }, [savedRulesKey]);
@@ -41,12 +40,6 @@ export function AvailabilityEditor({ hours: initial, timeOff, timezone, rules: s
   return <section className="availability" aria-labelledby="availability-heading">
     <h2 id="availability-heading" className="small-heading">Your availability</h2>
     <p className="muted">Clients can only pick start times inside these hours that leave room for the whole appointment plus your {buffer}-minute break before the next client. Times are {timezone.replace('_', ' ')}.</p>
-
-    {onToggleBooking && <div className={`booking-switch ${bookingOpen ? 'is-on' : ''}`}>
-      <div><strong>Online booking is {bookingOpen ? 'on' : 'off'}</strong>
-        <p className="muted">{bookingOpen ? 'Clients choose an available time, their request is saved in Bookings and the time is held. Contact them to confirm and collect the deposit.' : 'Clients can see your prices but send requests by Instagram or email. Turn this on once your weekly hours are saved.'}</p></div>
-      <button className={`button ${bookingOpen ? 'button-outline' : ''}`} disabled={busy} onClick={() => run(() => onToggleBooking(!bookingOpen), bookingOpen ? 'Online booking turned off.' : 'Online booking is on. New requests appear under Bookings.')}>{bookingOpen ? 'Turn off online booking' : 'Turn on online booking'}</button>
-    </div>}
 
     <h3 className="availability-subheading">Weekly hours</h3>
     <div className="hours-grid" role="group" aria-label="Weekly hours">

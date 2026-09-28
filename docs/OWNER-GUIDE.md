@@ -55,14 +55,13 @@ Your name and location, the line under your name, how clients can pay, the welco
 
 Clients only see start times inside your hours that leave room for the whole appointment plus your break before the next client. Every booked appointment removes its full length from the calendar automatically. Cancelling a booking frees the time again.
 
-## Online booking: on or off (Availability)
+## How clients book
 
-At the top of **Availability** you'll see **Online booking is on/off**.
+Clients pick a service, then a day and a start time from **your** availability, like Calendly. Start times are every 30 minutes within your weekly hours, and any time that would overlap another appointment, your break between clients, or a blocked date is left out automatically. Before confirming they read: *“I will be happy to confirm your time and send deposit details; your appointment is confirmed once your deposit is received. By booking, you agree to the booking policies 🤎”*. After they confirm they see **Booking confirmed** with two steps: **① send their booking to Styled by Sika** (already written) and **② send the deposit**. The booking appears in **Bookings** as *Awaiting deposit*, and that time is no longer offered to anyone else.
 
-- **Off:** clients see your menu and prices, then send you a request by text, Instagram or email with the service, their name and the day they'd like. You reply to confirm.
-- **On** (after you've saved your weekly hours): clients pick an open time on your calendar and see **Booking confirmed** with two steps to finish: **① text you their booking** (already written, one tap) and **② send the deposit**. The time is held so nobody else can take it, and the booking appears in **Bookings** as *Awaiting deposit*. When the deposit arrives, tap **Mark deposit paid**.
+If you haven't set any weekly hours, no times are shown and clients are asked to message you. Set your hours under **Availability** to start taking bookings.
 
-Automatic confirmation emails and reminders (24 hours and 2 hours before) are built in and switch on once an email service is connected. Until then you confirm and remind clients yourself.
+Automatic confirmation emails and reminders are built in and switch on once an email service is connected.
 
 ## Your phone number and e-transfer details
 
