@@ -4,9 +4,11 @@ This is your guide to running the website yourself. Nothing here needs a develop
 
 ## Signing in
 
-1. Open your website and scroll to the bottom. Tap **Braider sign in** (or go to `/admin`).
-2. Sign in with your email and password, or tap **Email me a sign-in link**.
-3. Only your email address can get in. Clients never see this area.
+**The first time:** open the one-time sign-in link you were sent. It logs you straight in. Then go to **Availability**, scroll to **Your sign-in**, and choose your password.
+
+**After that:** open your website, scroll to the bottom and tap **Braider sign in** (or go to `/admin`). Sign in with **styledbysika@gmail.com** and your password, or tap **Email me a sign-in link** if you forget it. You can change your password any time under **Your sign-in**.
+
+Only your email address can get in. Clients never see this area.
 
 You will land on **Today**: today's appointments, the next seven days, and who still owes a deposit.
 
