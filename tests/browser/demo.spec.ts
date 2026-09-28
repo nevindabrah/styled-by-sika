@@ -158,8 +158,10 @@ test('a service Book button opens booking with that service and the demo booking
   await expect(page.locator('.review-list')).toContainText('Large Knotless Braids — Shoulder Length');
   await expect(page.locator('.review-list')).toContainText('Blow-Dry');
   await page.getByRole('button', { name: 'Confirm booking', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'Booking request received.' })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Let Sika know you’ve booked' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Booking confirmed.' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /Send Sika your booking|Text Sika your booking/ })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Send your CA$20 deposit' })).toBeVisible();
+  await expect(page.locator('.deposit-step')).toContainText('Sika will reply with where to send it');
   await expect(page.getByLabel('Your booking message')).toHaveValue(/Reference: DEMO-/);
   await expect(page.getByLabel('Your booking message')).toHaveValue(/Name: Taylor Demo/);
   await expect(page.getByText('CA$175 · 3 hr 30 min')).toBeVisible();

@@ -11,7 +11,7 @@ export type Photo = { id: string; category: string; url: string; alt: string; wi
 export type Policy = { id: string; title: string; intro: string; items: string[]; outro: string };
 export type SiteText = {
   heroServices: string; welcomeTitle: string; welcomeBody: string; beforeYouBook: string; policies: Policy[];
-  thankYouTitle: string; thankYouBody: string; instagramHandle: string; email: string; phone: string; depositSummary: string; depositCents: number;
+  thankYouTitle: string; thankYouBody: string; instagramHandle: string; email: string; phone: string; etransferTo: string; depositSummary: string; depositCents: number;
 };
 export type SiteContent = { categories: Category[]; services: Service[]; extras: Extra[]; photos: Photo[]; text: SiteText; placeholder: boolean };
 
@@ -20,7 +20,7 @@ export const defaultText = (): SiteText => ({
   welcomeTitle: welcome.title, welcomeBody: welcome.body, beforeYouBook,
   policies: seedPolicies.map(p => ({ id: p.id, title: p.title, intro: p.intro ?? '', items: p.items ?? [], outro: p.outro ?? '' })),
   thankYouTitle: thankYou.title, thankYouBody: thankYou.body,
-  instagramHandle: contact.instagramHandle, email: contact.email, phone: '', depositSummary, depositCents,
+  instagramHandle: contact.instagramHandle, email: contact.email, phone: '', etransferTo: '', depositSummary, depositCents,
 });
 export const defaultContent = (): SiteContent => ({
   categories: seedCategories.map((c, i) => ({ slug: c.slug, label: c.label, short: c.short, sort_order: i, active: true })),
@@ -42,7 +42,7 @@ const policySchema = z.object({ id: z.string().min(1).max(40), title: z.string()
 export const textSchema = z.object({
   heroServices: z.string().trim().min(1).max(200), welcomeTitle: z.string().trim().min(1).max(120), welcomeBody: z.string().trim().min(1).max(1200), beforeYouBook: z.string().trim().max(800),
   policies: z.array(policySchema).max(12), thankYouTitle: z.string().trim().max(120), thankYouBody: z.string().trim().max(600),
-  instagramHandle: z.string().trim().regex(/^@?[\w.]{1,30}$/, 'Use your Instagram username, like @styledby.sika.').transform(h => h.startsWith('@') ? h : `@${h}`), email: z.email().max(200), phone: z.string().trim().regex(/^(\+?[\d\s().-]{10,20})?$/, 'Use a phone number like 416-555-0101, or leave it empty.'), depositSummary: z.string().trim().max(600), depositCents: money,
+  instagramHandle: z.string().trim().regex(/^@?[\w.]{1,30}$/, 'Use your Instagram username, like @styledby.sika.').transform(h => h.startsWith('@') ? h : `@${h}`), email: z.email().max(200), phone: z.string().trim().regex(/^(\+?[\d\s().-]{10,20})?$/, 'Use a phone number like 416-555-0101, or leave it empty.'), etransferTo: z.string().trim().max(120), depositSummary: z.string().trim().max(600), depositCents: money,
 }).partial();
 export const categorySchema = z.object({ slug: z.string().trim().max(60), label: z.string().trim().min(1).max(60), short: z.string().trim().max(30), sort_order: z.number().int().min(0), active: z.boolean() });
 export const serviceSchema = z.object({ id: z.string().max(60), slug: z.string().max(80), category: z.string().min(1), name: z.string().trim().min(2).max(120), description: z.string().trim().max(400), hair: z.string().trim().max(400), price_cents: money, duration_min: z.number().int().min(15).max(1440), duration_max_min: z.number().int().min(15).max(1440).nullable(), active: z.boolean(), sort_order: z.number().int().min(0) }).refine(s => s.duration_max_min === null || s.duration_max_min >= s.duration_min, 'The longest time must be at least the shortest time.');

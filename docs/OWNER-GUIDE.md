@@ -58,13 +58,15 @@ Clients only see start times inside your hours that leave room for the whole app
 At the top of **Availability** you'll see **Online booking is on/off**.
 
 - **Off:** clients see your menu and prices, then send you a request by text, Instagram or email with the service, their name and the day they'd like. You reply to confirm.
-- **On** (after you've saved your weekly hours): clients pick an open time on your calendar. They see **Booking request received** with a reference number, the time is held so nobody else can take it, and the request appears in **Bookings** as *Awaiting deposit*. They can also message you the details in one tap. You contact them to confirm and collect the deposit, then tap **Mark deposit paid**.
+- **On** (after you've saved your weekly hours): clients pick an open time on your calendar and see **Booking confirmed** with two steps to finish: **① text you their booking** (already written, one tap) and **② send the deposit**. The time is held so nobody else can take it, and the booking appears in **Bookings** as *Awaiting deposit*. When the deposit arrives, tap **Mark deposit paid**.
 
 Automatic confirmation emails and reminders (24 hours and 2 hours before) are built in and switch on once an email service is connected. Until then you confirm and remind clients yourself.
 
-## Your phone number (optional)
+## Your phone number and e-transfer details
 
-Under **Website → Text → Contact**, add the number you use for client texts. Clients then get a **Text Sika your booking** button that opens their Messages app with everything already written. Leave it empty to keep your number off the website.
+Under **Website → Text**:
+- **Phone number for texts** (Contact): clients get a **Text Sika your booking** button that opens their Messages app with everything written. Without it, step ① uses Instagram or email.
+- **E-transfer to** (Deposit): the email or number clients send the deposit to. It appears in step ② with a Copy button and their booking reference. Without it, step ② says you'll reply with where to send it.
 
 ## Deposits and payments
 

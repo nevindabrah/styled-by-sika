@@ -64,6 +64,7 @@ function TextTab({ text: saved, apply }: { text: SiteText; apply: Apply }) {
     <button type="button" className="button button-outline" onClick={() => set({ policies: [...t.policies, { id: `policy-${Date.now()}`, title: '', intro: '', items: [], outro: '' }] })}><Plus size={16} /> Add a policy</button>
     <h3>Deposit</h3>
     <Field label="Deposit amount (CA$)"><input type="number" min={0} step={1} value={dollars(t.depositCents)} onChange={e => set({ depositCents: cents(e.target.value) })} /></Field>
+    <Field label="E-transfer to (optional)" hint="The email or phone number clients send their deposit to. Shown in step 2 after they book."><input value={t.etransferTo ?? ''} maxLength={120} placeholder="e.g. your e-transfer email" onChange={e => set({ etransferTo: e.target.value })} /></Field>
     <Field label="Deposit and payment note" hint="Shown on the booking page and in confirmation emails"><textarea value={t.depositSummary} maxLength={600} rows={3} onChange={e => set({ depositSummary: e.target.value })} /></Field>
     <h3>Contact</h3>
     <Field label="Instagram username"><input value={t.instagramHandle} maxLength={31} onChange={e => set({ instagramHandle: e.target.value })} /></Field>

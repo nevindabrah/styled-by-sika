@@ -10,7 +10,7 @@ import { bookingMessage, mailLink, smsLink } from '@/lib/booking-message';
 import { addMonths, format, startOfMonth, getDaysInMonth } from 'date-fns';
 import { formatInTimeZone } from 'date-fns-tz';
 import { detailsSchema } from '@/lib/schemas';
-import { quote, durationLabel, durationRange, priceLabel } from '@/lib/pricing';
+import { quote, durationLabel, durationRange, money, priceLabel } from '@/lib/pricing';
 import { instagramLinks, type SiteContent, type SiteText } from '@/lib/content';
 import { useSiteContent } from '@/lib/use-site-content';
 import { makeICS } from '@/lib/ics';
@@ -30,6 +30,8 @@ export function BookingFlow({content,initialService,initialExtras,ready,smsEnabl
  const [step,setStep]=useState(0),[month,setMonth]=useState(startOfMonth(new Date())),[day,setDay]=useState(''),[start,setStart]=useState(''),[slots,setSlots]=useState<Record<string,string[]>>({}),[loading,setLoading]=useState(false),[error,setError]=useState(''),[submitting,setSubmitting]=useState(false),[receipt,setReceipt]=useState<Receipt|null>(null),[key,setKey]=useState('');
  const form=useForm<Details>({resolver:zodResolver(detailsSchema),defaultValues:{name:'',phone:'',email:'',instagram:'',notes:'',website:''}});
  useEffect(()=>setKey(crypto.randomUUID()),[]);
+ // Land on the confirmation, not the booking page's heading.
+ useEffect(()=>{if(receipt)window.scrollTo({top:0,behavior:'instant' as ScrollBehavior});},[receipt]);
  const q=useMemo(()=>{try{return quote(catalog,selection);}catch{return null;}},[catalog,selection]);
  const online=ready||isDemo,ig=instagramLinks(site.text.instagramHandle),hairPrep=site.text.policies.find(p=>p.id==='hair-prep');
  useEffect(()=>{if(step!==1||!online||!q)return;let active=true;const controller=new AbortController();setLoading(true);setError('');setSlots({});const total=getDaysInMonth(month),days=Array.from({length:total},(_,i)=>format(new Date(month.getFullYear(),month.getMonth(),i+1),'yyyy-MM-dd'));const today=format(new Date(),'yyyy-MM-dd');const last=format(new Date(Date.now()+60*86400000),'yyyy-MM-dd');const valid=days.filter(d=>d>=today&&d<=last);(async()=>{const result:Record<string,string[]>={};for(let i=0;i<valid.length;i+=5){await Promise.all(valid.slice(i,i+5).map(async d=>{if(isDemo){result[d]=demoSlots(d,q.duration);return;}const res=await fetch(`/api/availability?date=${d}&duration=${q.duration}`,{signal:controller.signal});const data=await res.json();if(!res.ok)throw new Error(data.error);result[d]=data.slots;}));}if(active)setSlots(result);})().catch(e=>{if(active)setError(e.message||'Could not check availability.');}).finally(()=>{if(active)setLoading(false);});return()=>{active=false;controller.abort();};},[month,q,step,online]);
@@ -45,15 +47,18 @@ export function BookingFlow({content,initialService,initialExtras,ready,smsEnabl
  if(receipt){
   const when=formatInTimeZone(receipt.start_at,receipt.snapshot.timezone,"EEEE, MMMM d 'at' h:mm a");
   const message=bookingMessage({service:receipt.snapshot.style,duration:durationLabel(receipt.duration_min),extras:receipt.snapshot.addons,estimate:receipt.snapshot.estimate,when,name:form.getValues('name'),reference:receipt.reference},true);
-  return <section className="receipt"><div className="receipt-icon"><Check size={30}/></div><div className="eyebrow">{isDemo?'DEMO · ':''}{receipt.reference}</div><h1 className="page-title">Booking request received.</h1>
-  <p className="page-intro">{isDemo?'This is the demo, so nothing was sent. On the live site this request appears in Sika’s dashboard and the time is held.':receipt.emailed?'Your time is held and the details are in your email. Your appointment is confirmed once your deposit is received.':'Your time is held. Sika will contact you to confirm, and your appointment is confirmed once your deposit is received.'}</p>
-  <div className="notice"><h2 className="small-heading">{receipt.snapshot.style}</h2><p>{formatInTimeZone(receipt.start_at,receipt.snapshot.timezone,'EEEE, MMMM d · h:mm a zzz')}</p>{receipt.snapshot.addons.length>0&&<p>Extras: {receipt.snapshot.addons.join(', ')}</p>}<p>{receipt.snapshot.estimate} · {durationLabel(receipt.duration_min)}</p><p>Reference: {receipt.reference}</p></div>
-  <div className="notice"><strong>Your deposit</strong><p>{receipt.snapshot.deposit}</p></div>
-  <NotifySika message={message} text={site.text} subject={`Booking request ${receipt.reference}`} heading={receipt.emailed?'Want to message Sika too?':'Let Sika know you’ve booked'}/>
+  return <section className="receipt"><div className="receipt-icon"><Check size={30}/></div><div className="eyebrow">{isDemo?'DEMO · ':''}{receipt.reference}</div><h1 className="page-title">Booking confirmed.</h1>
+  <p className="page-intro">{receipt.snapshot.style}, {when}. Your time is saved. Complete these two steps to secure your appointment.</p>
+  <ol className="booking-steps">
+   <li className="booking-step"><span className="step-number" aria-hidden="true">1</span><div><h2 className="small-heading">{site.text.phone?'Text Sika your booking':'Send Sika your booking'}</h2><p className="muted">Your details are already written. {site.text.phone?'Tap below and press send.':'Choose how to send them.'}</p><NotifySika message={message} text={site.text} subject={`Booking ${receipt.reference}`}/></div></li>
+   <li className="booking-step"><span className="step-number" aria-hidden="true">2</span><div><h2 className="small-heading">Send your {money(site.text.depositCents)} deposit</h2><DepositStep text={site.text} reference={receipt.reference}/></div></li>
+  </ol>
+  <div className="notice"><strong>Your booking</strong><p>{formatInTimeZone(receipt.start_at,receipt.snapshot.timezone,'EEEE, MMMM d · h:mm a zzz')}</p><p>{receipt.snapshot.style}</p>{receipt.snapshot.addons.length>0&&<p>Extras: {receipt.snapshot.addons.join(', ')}</p>}<p>{receipt.snapshot.estimate} · {durationLabel(receipt.duration_min)}</p><p>Reference: {receipt.reference}</p></div>
   {hairPrep&&<><h2 className="small-heading">Before your appointment</h2>{hairPrep.intro&&<p>{hairPrep.intro}</p>}<ul className="prose">{hairPrep.items.map(item=><li key={item}>{item}</li>)}</ul>{hairPrep.outro&&<p className="muted">{hairPrep.outro}</p>}</>}
   {isDemo&&<p className="muted">No email was sent. This appointment is stored only in this browser tab for the demo.</p>}
   <button className="button" onClick={()=>{const url=URL.createObjectURL(new Blob([makeICS(receipt)],{type:'text/calendar'}));const a=document.createElement('a');a.href=url;a.download=`${receipt.reference}.ics`;a.click();URL.revokeObjectURL(url);}}>{isDemo?'Download sample calendar file':'Add to my calendar'}</button>{isDemo&&<Link className="button button-outline full-width" href="/demo/admin">View demo dashboard ↗</Link>}</section>;
  }
+
  if(!online)return <div id="booking-top" className="estimator-grid"><div>{picker}</div><div>{summary}<RequestPanel catalog={catalog} selection={selection} text={site.text}/></div></div>;
  return <div id="booking-top"><div className="booking-progress" aria-label={`Step ${step+1} of 4`}>{['Service','Date & time','Details','Review'].map((s,i)=><span className={step===i?'active':''} key={s} aria-current={step===i?'step':undefined}><b>{i+1}</b>{s}</span>)}</div><div className="estimator-grid"><div>
  {step===0&&picker}
@@ -84,12 +89,12 @@ function RequestPanel({catalog,selection,text}:{catalog:Catalog;selection:Select
 }
 
 // One-tap ways to send Sika the booking: text (prefilled), Instagram (copy, then paste) or email (prefilled).
-function NotifySika({message,text,subject,heading}:{message:string;text:SiteText;subject:string;heading:string}){
+function NotifySika({message,text,subject,heading}:{message:string;text:SiteText;subject:string;heading?:string}){
  const [copied,setCopied]=useState(false),[copyFailed,setCopyFailed]=useState(false);
  const ig=instagramLinks(text.instagramHandle),sms=text.phone?smsLink(text.phone,message):'';
  async function copy(){try{await navigator.clipboard.writeText(message);setCopied(true);setCopyFailed(false);}catch{setCopyFailed(true);}}
- return <div className="receipt-steps">
-  <h2 className="small-heading">{heading}</h2>
+ return <div className={heading?'receipt-steps':'notify-inline'}>
+  {heading&&<h2 className="small-heading">{heading}</h2>}
   <div className="notify-buttons">
    {sms&&<a className="button full-width" href={sms}><MessageSquare size={18} aria-hidden="true"/> Text Sika your booking</a>}
    {copied
@@ -100,5 +105,18 @@ function NotifySika({message,text,subject,heading}:{message:string;text:SiteText
    <a className="button button-outline full-width" href={mailLink(text.email,subject,message)}><Mail size={18} aria-hidden="true"/> Send by email</a>
   </div>
   <details open={copyFailed}><summary className="notify-step">See the message</summary><textarea readOnly className="message-preview" value={message} onFocus={e=>e.currentTarget.select()} aria-label="Your booking message"/></details>
+ </div>;
+}
+
+// Step 2: where and how to send the deposit, with the booking reference to include.
+function DepositStep({text,reference}:{text:SiteText;reference:string}){
+ const [copied,setCopied]=useState(false);
+ return <div className="deposit-step">
+  {text.etransferTo?<>
+   <p>Send <strong>{money(text.depositCents)}</strong> by e-transfer to:</p>
+   <div className="copy-field"><strong>{text.etransferTo}</strong><button type="button" className="button button-small button-outline" onClick={async()=>{try{await navigator.clipboard.writeText(text.etransferTo);setCopied(true);}catch{/* the address is shown to copy by hand */}}}>{copied?'Copied':'Copy'}</button></div>
+   <p className="muted">Put <strong>{reference}</strong> in the message so Sika can match it. Paying cash instead? Let her know when you text.</p>
+  </>:<p>Sika will reply with where to send it. You can pay by e-transfer or cash.</p>}
+  <p className="muted"><Link href="/#deposit" target="_blank">Deposit policy</Link> · non-refundable, goes toward your balance.</p>
  </div>;
 }

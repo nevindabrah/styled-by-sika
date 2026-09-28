@@ -765,3 +765,25 @@ html { overflow-x: hidden; overflow-x: clip; }
 .photo-viewer .photo-viewer-close { position: absolute; top: 14px; right: 14px; background: #211b2d; color: #fff; border-color: #ffffff55; }
 .photo-viewer-controls { position: absolute; bottom: calc(22px + env(safe-area-inset-bottom)); left: 0; right: 0; display: flex; justify-content: center; gap: 16px; }
 .photo-viewer-controls .icon-button { width: 52px; height: 52px; background: #211b2d; color: #fff; border-color: #ffffff55; }
+
+/* Category strip: a track with two identical copies slides left and loops back seamlessly. */
+.ticker { justify-content: flex-start; gap: 0; padding-left: 0; }
+.ticker-track { display: flex; align-items: center; width: max-content; animation: ticker-slide 30s linear infinite; will-change: transform; }
+.ticker .ticker-item { display: inline-flex; align-items: center; gap: 32px; padding-right: 32px; }
+@keyframes ticker-slide { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+@media (max-width: 760px) { .ticker .ticker-item { gap: 22px; padding-right: 22px; } }
+
+/* "Booking confirmed" steps. */
+.booking-steps { list-style: none; padding: 0; margin: 24px 0; display: flex; flex-direction: column; gap: 14px; }
+.booking-step { display: grid; grid-template-columns: 40px 1fr; gap: 14px; padding: 18px; border: 1px solid var(--accent); border-radius: 16px; background: var(--surface); }
+.booking-step .small-heading { margin: 4px 0 6px; font-size: 21px; }
+.booking-step p { margin: 0 0 8px; }
+.step-number { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; background: var(--accent); color: #171321; font-weight: 700; }
+.notify-inline .notify-buttons { margin-top: 6px; }
+.copy-field { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 14px; margin: 6px 0 10px; border: 1px dashed var(--line); border-radius: 12px; overflow-wrap: anywhere; }
+@media (max-width: 480px) { .booking-step { grid-template-columns: 1fr; } .step-number { width: 32px; height: 32px; } }
+[data-theme="light"] .step-number { color: #fff; }
+/* After booking, the confirmation replaces the page heading. */
+.page-section:has(.receipt) .book-heading { display: none; }
+.receipt { padding-top: 8px; }
+.deposit-step a { color: var(--accent); text-decoration: underline; }
