@@ -5,7 +5,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import Link from 'next/link';
-import { ChevronLeft, ChevronRight, ArrowRight, Check, Instagram, Mail } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ArrowRight, Check, Instagram, Mail, MessageSquare } from 'lucide-react';
+import { bookingMessage, mailLink, smsLink } from '@/lib/booking-message';
 import { addMonths, format, startOfMonth, getDaysInMonth } from 'date-fns';
 import { formatInTimeZone } from 'date-fns-tz';
 import { detailsSchema } from '@/lib/schemas';
@@ -16,7 +17,7 @@ import { makeICS } from '@/lib/ics';
 import type { Booking, Catalog, Selection } from '@/lib/types';
 import { ServicePicker, QuoteSummary } from './service-picker';
 type Details=z.infer<typeof detailsSchema>;
-type Receipt={id:string;reference:string;start_at:string;end_at:string;price_cents:number;duration_min:number;snapshot:{style:string;addons:string[];estimate:string;deposit:string;timezone:string};calendarSaved:boolean;emailSent:boolean};
+type Receipt={id:string;reference:string;start_at:string;end_at:string;price_cents:number;duration_min:number;snapshot:{style:string;addons:string[];estimate:string;deposit:string;timezone:string};calendarSaved:boolean;emailSent:boolean;emailed?:boolean};
 const policyLink=<Link href="/#before-you-book" target="_blank">booking policies</Link>;
 // Links use readable slugs; ids are accepted too. Resolved on the client so demo edits (new services) work as well.
 function resolve(catalog:Catalog,service:string,extras:string[]):Selection{const s=catalog.services.find(x=>x.slug===service||x.id===service);return {service:s?.id??'',extras:[...new Set(extras.map(x=>catalog.extras.find(e=>(e.slug===x||e.id===x)&&e.bookable)?.id).filter((id):id is string=>!!id))]};}
@@ -41,7 +42,18 @@ export function BookingFlow({content,initialService,initialExtras,ready,smsEnabl
  }const response=await fetch('/api/bookings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...selection,start,details:form.getValues(),idempotencyKey:key})});const data=await response.json();if(response.status===409){setStart('');setStep(1);setSlots({});setError(data.error);setKey(crypto.randomUUID());return;}if(!response.ok)throw new Error(data.error);setReceipt(data);}catch(e){setError((e as Error).message||'Something went wrong. Please retry.');}finally{setSubmitting(false);}}
  const picker=<ServicePicker catalog={catalog} categories={site.categories} value={selection} onChange={s=>{setTouched(true);setSelection(s);setStart('');setDay('');setKey(crypto.randomUUID());}}/>;
  const summary=<QuoteSummary catalog={catalog} selection={selection} depositNote={site.text.depositSummary}/>;
- if(receipt)return <section className="receipt"><div className="receipt-icon"><Check size={30}/></div><div className="eyebrow">{receipt.reference}</div><h1 className="page-title">{isDemo?'Demo appointment saved.':receipt.calendarSaved?'Appointment saved.':'Request received.'}</h1><p className="page-intro">{isDemo?'You’ve completed the booking demo. No real appointment was created. You can view this sample booking in the demo dashboard.':receipt.calendarSaved?'You’re on the calendar. Your appointment is confirmed once your deposit is received.':'Your request is saved. Calendar confirmation is still processing; please wait for confirmation before sending a deposit.'}</p><div className="notice"><h2 className="small-heading">{receipt.snapshot.style}</h2><p>{formatInTimeZone(receipt.start_at,receipt.snapshot.timezone,'EEEE, MMMM d · h:mm a zzz')}</p>{receipt.snapshot.addons.length>0&&<p>Extras: {receipt.snapshot.addons.join(', ')}</p>}<p>{receipt.snapshot.estimate} · {durationLabel(receipt.duration_min)}</p></div>{receipt.calendarSaved&&<div className="notice"><strong>Your deposit</strong><p>{receipt.snapshot.deposit}</p></div>}{hairPrep&&<><h2 className="small-heading">Before your appointment</h2>{hairPrep.intro&&<p>{hairPrep.intro}</p>}<ul className="prose">{hairPrep.items.map(item=><li key={item}>{item}</li>)}</ul>{hairPrep.outro&&<p className="muted">{hairPrep.outro}</p>}</>}<p className="muted">{isDemo?'No email was sent. This appointment is stored only in this browser tab for the demo.':receipt.emailSent?'Your confirmation email has been sent.':'Your email is still processing. Keep your booking reference.'}</p>{receipt.calendarSaved&&<button className="button" onClick={()=>{const url=URL.createObjectURL(new Blob([makeICS(receipt)],{type:'text/calendar'}));const a=document.createElement('a');a.href=url;a.download=`${receipt.reference}.ics`;a.click();URL.revokeObjectURL(url);}}>{isDemo?'Download sample calendar file':'Add to calendar'}</button>}{isDemo&&<Link className="button button-outline full-width" href="/demo/admin">View demo dashboard ↗</Link>}</section>;
+ if(receipt){
+  const when=formatInTimeZone(receipt.start_at,receipt.snapshot.timezone,"EEEE, MMMM d 'at' h:mm a");
+  const message=bookingMessage({service:receipt.snapshot.style,duration:durationLabel(receipt.duration_min),extras:receipt.snapshot.addons,estimate:receipt.snapshot.estimate,when,name:form.getValues('name'),reference:receipt.reference},true);
+  return <section className="receipt"><div className="receipt-icon"><Check size={30}/></div><div className="eyebrow">{isDemo?'DEMO · ':''}{receipt.reference}</div><h1 className="page-title">Booking request received.</h1>
+  <p className="page-intro">{isDemo?'This is the demo, so nothing was sent. On the live site this request appears in Sika’s dashboard and the time is held.':receipt.emailed?'Your time is held and the details are in your email. Your appointment is confirmed once your deposit is received.':'Your time is held. Sika will contact you to confirm, and your appointment is confirmed once your deposit is received.'}</p>
+  <div className="notice"><h2 className="small-heading">{receipt.snapshot.style}</h2><p>{formatInTimeZone(receipt.start_at,receipt.snapshot.timezone,'EEEE, MMMM d · h:mm a zzz')}</p>{receipt.snapshot.addons.length>0&&<p>Extras: {receipt.snapshot.addons.join(', ')}</p>}<p>{receipt.snapshot.estimate} · {durationLabel(receipt.duration_min)}</p><p>Reference: {receipt.reference}</p></div>
+  <div className="notice"><strong>Your deposit</strong><p>{receipt.snapshot.deposit}</p></div>
+  <NotifySika message={message} text={site.text} subject={`Booking request ${receipt.reference}`} heading={receipt.emailed?'Want to message Sika too?':'Let Sika know you’ve booked'}/>
+  {hairPrep&&<><h2 className="small-heading">Before your appointment</h2>{hairPrep.intro&&<p>{hairPrep.intro}</p>}<ul className="prose">{hairPrep.items.map(item=><li key={item}>{item}</li>)}</ul>{hairPrep.outro&&<p className="muted">{hairPrep.outro}</p>}</>}
+  {isDemo&&<p className="muted">No email was sent. This appointment is stored only in this browser tab for the demo.</p>}
+  <button className="button" onClick={()=>{const url=URL.createObjectURL(new Blob([makeICS(receipt)],{type:'text/calendar'}));const a=document.createElement('a');a.href=url;a.download=`${receipt.reference}.ics`;a.click();URL.revokeObjectURL(url);}}>{isDemo?'Download sample calendar file':'Add to my calendar'}</button>{isDemo&&<Link className="button button-outline full-width" href="/demo/admin">View demo dashboard ↗</Link>}</section>;
+ }
  if(!online)return <div id="booking-top" className="estimator-grid"><div>{picker}</div><div>{summary}<RequestPanel catalog={catalog} selection={selection} text={site.text}/></div></div>;
  return <div id="booking-top"><div className="booking-progress" aria-label={`Step ${step+1} of 4`}>{['Service','Date & time','Details','Review'].map((s,i)=><span className={step===i?'active':''} key={s} aria-current={step===i?'step':undefined}><b>{i+1}</b>{s}</span>)}</div><div className="estimator-grid"><div>
  {step===0&&picker}
@@ -51,19 +63,42 @@ export function BookingFlow({content,initialService,initialExtras,ready,smsEnabl
  {error&&<div role="alert" className="status-message">{error}</div>}<div className="booking-actions">{step>0?<button className="button button-outline" onClick={()=>move(step-1)} disabled={submitting}>Back</button>:<span/>}{step===2?<button className="button" type="submit" form="details-form">Review booking <ArrowRight size={17}/></button>:step===3?<button className="button" onClick={submit} disabled={submitting}>{submitting?'Saving your appointment…':'Confirm booking'}</button>:<button className="button" disabled={!q||(step===1&&!start)} onClick={()=>move(step+1)}> {step===0?'Choose your time':'Your details'} <ArrowRight size={17}/></button>}</div></div>{summary}</div></div>;
 }
 
-// Until online booking is switched on, clients send their chosen service to Sika directly.
+// While online booking is off, clients tell Sika what they'd like and when, and send it in one step.
 function RequestPanel({catalog,selection,text}:{catalog:Catalog;selection:Selection;text:SiteText}){
- const [copied,setCopied]=useState(false);
- const ig=instagramLinks(text.instagramHandle);
+ const [name,setName]=useState(''),[date,setDate]=useState(''),[time,setTime]=useState('');
  let q;try{q=quote(catalog,selection);}catch{q=null;}
- const message=q?[`Hi Sika! I’d like to book:`,`${q.service.name} (${durationRange(q.service)})`,...q.breakdown.slice(1).map(l=>`+ ${l.label} (${priceLabel(l)})`),`Estimated total: ${q.estimate}`,'','Preferred date and time: ','Name: ','','I have read and agree to the booking policies.'].join('\n'):'';
+ const when=date?`${format(new Date(`${date}T12:00:00`),'EEEE, MMMM d')}${time?`, ${time.toLowerCase()}`:''}`:time;
+ const message=q?bookingMessage({service:q.service.name,duration:durationRange(q.service),extras:q.breakdown.slice(1).map(l=>`${l.label} (${priceLabel(l)})`),estimate:q.estimate,when,name:name.trim()},false):'';
  return <section className="request-panel" aria-labelledby="request-heading">
   <h2 id="request-heading" className="small-heading">Send your booking request.</h2>
-  <p className="muted">Message me with your service and preferred date. I’ll confirm your time and send deposit details. By booking, you confirm that you have read and agree to the {policyLink}.</p>
-  {q?<div className="request-actions">
-   <a className="button full-width" href={ig.dm} target="_blank" rel="noreferrer" onClick={async()=>{try{await navigator.clipboard.writeText(message);setCopied(true);}catch{/* Clipboard can be blocked; the email option still carries the details. */}}}><Instagram size={18} aria-hidden="true"/> Book on Instagram</a>
-   <a className="button button-outline full-width" href={`mailto:${text.email}?subject=${encodeURIComponent(`Booking request: ${q.service.name}`)}&body=${encodeURIComponent(message)}`}><Mail size={18} aria-hidden="true"/> Book by email</a>
-  </div>:<p className="notice">Choose a service above to send your request.</p>}
-  {copied&&<p className="status-message" role="status">Your booking details are copied. Paste them into the Instagram chat.</p>}
+  <p className="muted">Tell Sika when you’d like to come. She’ll reply to confirm your time and send deposit details; your appointment is confirmed once your deposit is received. By booking, you agree to the {policyLink}.</p>
+  {q?<>
+   <div className="request-fields">
+    <label>Your name<input value={name} maxLength={100} autoComplete="name" onChange={e=>setName(e.target.value)}/></label>
+    <label>Preferred date<input type="date" value={date} min={format(new Date(),'yyyy-MM-dd')} onChange={e=>setDate(e.target.value)}/></label>
+    <label className="span-two">Preferred time<select value={time} onChange={e=>setTime(e.target.value)}><option value="">Any time</option><option>Morning</option><option>Afternoon</option><option>Evening</option></select></label>
+   </div>
+   <NotifySika message={message} text={text} subject={`Booking request: ${q.service.name}`} heading="Send it to Sika"/>
+  </>:<p className="notice">Choose a service above to send your request.</p>}
  </section>;
+}
+
+// One-tap ways to send Sika the booking: text (prefilled), Instagram (copy, then paste) or email (prefilled).
+function NotifySika({message,text,subject,heading}:{message:string;text:SiteText;subject:string;heading:string}){
+ const [copied,setCopied]=useState(false),[copyFailed,setCopyFailed]=useState(false);
+ const ig=instagramLinks(text.instagramHandle),sms=text.phone?smsLink(text.phone,message):'';
+ async function copy(){try{await navigator.clipboard.writeText(message);setCopied(true);setCopyFailed(false);}catch{setCopyFailed(true);}}
+ return <div className="receipt-steps">
+  <h2 className="small-heading">{heading}</h2>
+  <div className="notify-buttons">
+   {sms&&<a className="button full-width" href={sms}><MessageSquare size={18} aria-hidden="true"/> Text Sika your booking</a>}
+   {copied
+    ?<a className="button full-width" href={ig.dm} target="_blank" rel="noreferrer"><Instagram size={18} aria-hidden="true"/> Copied — open Instagram and paste</a>
+    :<button type="button" className={`button full-width ${sms?'button-outline':''}`} onClick={copy}><Instagram size={18} aria-hidden="true"/> Send on Instagram</button>}
+   {copied&&<p className="notify-step" role="status">Your booking details are copied. In the Instagram chat with {text.instagramHandle}, tap the message box, choose <b>Paste</b>, then send.</p>}
+   {copyFailed&&<p className="notify-step" role="status">Copying isn’t allowed in this browser. Open the message below, copy it, and send it to {text.instagramHandle} on Instagram.</p>}
+   <a className="button button-outline full-width" href={mailLink(text.email,subject,message)}><Mail size={18} aria-hidden="true"/> Send by email</a>
+  </div>
+  <details open={copyFailed}><summary className="notify-step">See the message</summary><textarea readOnly className="message-preview" value={message} onFocus={e=>e.currentTarget.select()} aria-label="Your booking message"/></details>
+ </div>;
 }

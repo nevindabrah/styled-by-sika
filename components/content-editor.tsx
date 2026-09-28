@@ -68,6 +68,7 @@ function TextTab({ text: saved, apply }: { text: SiteText; apply: Apply }) {
     <h3>Contact</h3>
     <Field label="Instagram username"><input value={t.instagramHandle} maxLength={31} onChange={e => set({ instagramHandle: e.target.value })} /></Field>
     <Field label="Email address"><input type="email" value={t.email} maxLength={200} onChange={e => set({ email: e.target.value })} /></Field>
+    <Field label="Phone number for texts (optional)" hint="Clients can text you their booking in one tap. Leave empty to keep your number off the site."><input type="tel" value={t.phone ?? ''} maxLength={20} placeholder="416-555-0101" onChange={e => set({ phone: e.target.value })} /></Field>
     <Field label="Thank-you title"><input value={t.thankYouTitle} maxLength={120} onChange={e => set({ thankYouTitle: e.target.value })} /></Field>
     <Field label="Thank-you line"><input value={t.thankYouBody} maxLength={600} onChange={e => set({ thankYouBody: e.target.value })} /></Field>
     <div className="admin-actions"><button type="button" className="button" disabled={!dirty || busy} onClick={save}>Save text</button>{dirty && <button type="button" className="button button-outline" disabled={busy} onClick={() => setT(saved)}>Undo changes</button>}</div>

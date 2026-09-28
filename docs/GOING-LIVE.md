@@ -1,6 +1,6 @@
 # Going live
 
-Two services are required: **Supabase** (database, sign-in, photo storage, reminder scheduler) and **Resend** (emails). Hosting is **Vercel**. **Twilio** (text messages), Google Calendar and Upstash are optional and can be added later without code changes.
+Only **Supabase** (database, sign-in, photo storage, scheduler) and **Vercel** (hosting) are required. The braider switches online booking on herself in her dashboard; without an email service, clients see their request on screen and she contacts them. **Resend** (emails), **Twilio** (texts), Google Calendar and Upstash are optional and can be added later without code changes.
 
 ## 1. Supabase (10 minutes)
 
@@ -25,7 +25,7 @@ Two services are required: **Supabase** (database, sign-in, photo storage, remin
 
 After this, `npm run dev` runs against the real database. Sign in at `/login`; everything in Website and Availability is now saved to Supabase.
 
-## 2. Resend (5 minutes)
+## 2. Resend (optional, 5 minutes — automatic emails)
 
 1. resend.com → add and verify the domain the emails will come from (or use the Resend test domain to try it first).
 2. **API Keys → Create** → `RESEND_API_KEY`. Set `FROM_EMAIL` (an address on the verified domain) and `BRAIDER_EMAIL` (where Sika receives booking notices).
@@ -33,7 +33,7 @@ After this, `npm run dev` runs against the real database. Sign in at `/login`; e
 ## 3. Vercel (10 minutes)
 
 1. Push this repo to GitHub, then vercel.com → **Add New Project** → import it. Framework is detected automatically.
-2. **Environment Variables**: run `npm run env:vercel -- https://<your-address>` to write `.env.vercel` (everything the site needs from `.env.local`, without `DATABASE_URL`, values never printed). Open it, copy all, paste into the first *Key* box in Vercel, save, then delete the file. `NEXT_PUBLIC_*` values are built into the site, so redeploy after changing them. Keep `BOOKING_ENABLED=false` for the first deploy.
+2. **Environment Variables**: run `npm run env:vercel -- https://<your-address>` to write `.env.vercel` (everything the site needs from `.env.local`, without `DATABASE_URL`, values never printed). Open it, copy all, paste into the first *Key* box in Vercel, save, then delete the file. `NEXT_PUBLIC_*` values are built into the site, so redeploy after changing them. Online booking stays off until she turns it on under Availability.
 3. Deploy. Check the site, sign in at `/admin`, upload a photo, change a price.
 
 ## 4. Reminders scheduler (2 minutes)
@@ -47,11 +47,11 @@ The same run retries any confirmation email or text that failed.
 
 ## 5. Switch on online booking
 
-1. Sika saves her weekly hours once in **Availability** (this records her approval of them).
-2. Run `npm run check:launch` locally with `BOOKING_ENABLED=true` and `NEXT_PUBLIC_SITE_URL` set to the https address. Fix anything it lists.
-3. In Vercel set `BOOKING_ENABLED=true` and redeploy. Make a test booking with a real email, confirm the emails arrive, mark the deposit paid in the dashboard, and cancel it.
+1. Sika saves her weekly hours in **Availability**, then taps **Turn on online booking** at the top of the same page.
+2. Run `npm run check:launch` to confirm nothing is missing.
+3. Make a test booking on the live site: it should show *Booking request received*, appear under **Bookings**, and hold the time. Cancel it from the dashboard.
 
-Until step 4, `/book` still shows prices and sends requests to Sika by Instagram DM or email.
+While online booking is off, `/book` shows prices and lets clients send a request by text, Instagram or email with their name and preferred day filled in.
 
 ## Text messages (Twilio)
 

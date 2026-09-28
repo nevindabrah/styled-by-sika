@@ -53,15 +53,22 @@ The line under your name, the welcome message, every policy (deposit, payment, c
 
 Clients only see start times inside your hours that leave room for the whole appointment plus your break before the next client. Every booked appointment removes its full length from the calendar automatically. Cancelling a booking frees the time again.
 
-## How clients book (for now)
+## Online booking: on or off (Availability)
 
-Clients pick a service on the website and tap **Book on Instagram** (their request is copied so they can paste it into your DMs) or **Book by email**. You confirm the time, collect the deposit and send reminders yourself, the same way you do now.
+At the top of **Availability** you'll see **Online booking is on/off**.
 
-Automatic confirmations and reminders (24 hours and 2 hours before, by email and text) are already built in. They switch on once online booking is connected to an email service, and they'll be listed here then.
+- **Off:** clients see your menu and prices, then send you a request by text, Instagram or email with the service, their name and the day they'd like. You reply to confirm.
+- **On** (after you've saved your weekly hours): clients pick an open time on your calendar. They see **Booking request received** with a reference number, the time is held so nobody else can take it, and the request appears in **Bookings** as *Awaiting deposit*. They can also message you the details in one tap. You contact them to confirm and collect the deposit, then tap **Mark deposit paid**.
+
+Automatic confirmation emails and reminders (24 hours and 2 hours before) are built in and switch on once an email service is connected. Until then you confirm and remind clients yourself.
+
+## Your phone number (optional)
+
+Under **Website → Text → Contact**, add the number you use for client texts. Clients then get a **Text Sika your booking** button that opens their Messages app with everything already written. Leave it empty to keep your number off the website.
 
 ## Deposits and payments
 
-Clients pay you directly by cash or e-transfer. Once online booking is on, open the booking when a deposit arrives and tap **Mark deposit paid**; the client is then confirmed automatically.
+Clients pay you directly by cash or e-transfer. When a deposit arrives, open the booking and tap **Mark deposit paid** so your dashboard shows it as confirmed.
 
 ## If something looks wrong
 

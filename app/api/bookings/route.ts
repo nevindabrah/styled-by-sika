@@ -7,8 +7,9 @@ import { quote } from '@/lib/pricing';
 import { availableSlots } from '@/lib/live-availability';
 import { rateLimit } from '@/lib/rate-limit';
 import { processJob } from '@/lib/jobs';
+import { emailConfigured } from '@/lib/notify';
 export const maxDuration=60;
-const receipt=(b:Record<string,unknown>)=>({id:b.id,reference:b.reference,start_at:b.start_at,end_at:b.end_at,price_cents:b.price_cents,duration_min:b.duration_min,snapshot:b.snapshot,calendarSaved:['calendar_saved','synced'].includes(String(b.sync_state)),emailSent:b.sync_state==='synced'});
+const receipt=(b:Record<string,unknown>)=>({id:b.id,reference:b.reference,start_at:b.start_at,end_at:b.end_at,price_cents:b.price_cents,duration_min:b.duration_min,snapshot:b.snapshot,calendarSaved:['calendar_saved','synced'].includes(String(b.sync_state)),emailSent:b.sync_state==='synced'&&emailConfigured(),emailed:emailConfigured()});
 export async function POST(request:Request){
  try{
  const parsed=bookingSchema.safeParse(await request.json());if(!parsed.success)return NextResponse.json({error:'Please check your details and service choice.'},{status:400});

@@ -695,3 +695,33 @@ body { font-size: 16px; line-height: 1.6; }
 }
 [data-theme="light"] .editor-group.is-open { background: #00000005; }
 [data-theme="light"] .editor-danger { color: #90293b; border-color: #90293b60; }
+
+/* Drawn star (replaces the ✳ character, which iPhones show as a green emoji). */
+.spark { display: inline-block; vertical-align: -0.12em; }
+.headline-spark .spark, .closing-star .spark { display: block; }
+.ticker i { display: inline-flex; align-items: center; }
+
+/* On phones her photo sits on the right, with the welcome text beside it. */
+@media (max-width: 760px) {
+  .braider-intro { display: flow-root; }
+  .braider-intro .braider-portrait { float: right; width: 118px; margin: 0 0 14px 16px; }
+  .braider-intro .braider-intro-copy .eyebrow { margin-top: 4px; }
+}
+
+/* Booking confirmation and the "let Sika know" step. */
+.receipt-steps { margin: 22px 0; padding: 18px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); }
+.receipt-steps h2 { margin-top: 0; }
+.notify-buttons { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
+.notify-buttons .button { gap: 10px; }
+.notify-step { font-size: 14px; color: var(--muted); margin: 6px 0 0; }
+.message-preview { width: 100%; min-height: 150px; font-size: 14px; line-height: 1.5; margin-top: 12px; color: var(--paper); background: var(--bg); }
+.request-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 12px 0; }
+.request-fields .span-two { grid-column: 1 / -1; }
+.request-fields label { display: flex; flex-direction: column; gap: 6px; font-size: 15px; }
+@media (max-width: 600px) { .request-fields { grid-template-columns: 1fr; } .request-fields .span-two { grid-column: auto; } }
+.booking-switch { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px; padding: 18px; margin: 18px 0 8px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); }
+.booking-switch.is-on { border-color: var(--accent); }
+.booking-switch > div { flex: 1 1 260px; }
+.booking-switch p { margin: 4px 0 0; font-size: 15px; }
+.ticker > span { display: inline-flex; align-items: center; gap: 32px; }
+@media (max-width: 760px) { .ticker > span { gap: 22px; } }
