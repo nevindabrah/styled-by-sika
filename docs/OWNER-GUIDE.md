@@ -46,9 +46,10 @@ The line under your name, the welcome message, every policy (deposit, payment, c
 ## When clients can book (Availability)
 
 - **Weekly hours**: tick the days you work and set opening and closing times. **Save hours**.
+- **Booking rules**: the break you need between clients, how much notice clients must give (at least 24 hours), and how many days ahead they can book. **Save booking rules**.
 - **Blocked dates & times**: a holiday, a day off, or a few hours. Tick **Whole day** or set a from/to time, then **Block this time**.
 
-Clients only see start times inside your hours that leave room for the whole appointment plus your 30-minute break before the next client. Every booked appointment removes its full length from the calendar automatically. Cancelling a booking frees the time again.
+Clients only see start times inside your hours that leave room for the whole appointment plus your break before the next client. Every booked appointment removes its full length from the calendar automatically. Cancelling a booking frees the time again.
 
 ## Deposits and payments
 

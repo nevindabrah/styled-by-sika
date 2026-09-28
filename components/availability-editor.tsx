@@ -5,15 +5,22 @@ import { formatInTimeZone, fromZonedTime } from 'date-fns-tz';
 import { Trash2 } from 'lucide-react';
 import { weekdayNames, type TimeOff, type WeekHours } from '@/lib/availability';
 
+export type BookingRules = { buffer_min: number; minimum_notice_hours: number; window_days: number };
 type Props = {
-  hours: WeekHours; timeOff: TimeOff[]; timezone: string; buffer: number;
+  hours: WeekHours; timeOff: TimeOff[]; timezone: string; rules: BookingRules;
+  onSaveRules: (rules: BookingRules) => Promise<void>;
   onSaveHours: (hours: WeekHours) => Promise<void>;
   onAddTimeOff: (block: { start_at: string; end_at: string; reason: string }) => Promise<void>;
   onRemoveTimeOff: (id: string) => Promise<void>;
 };
 
 // Sika decides which times clients can book: weekly hours plus one-off blocked dates and times.
-export function AvailabilityEditor({ hours: initial, timeOff, timezone, buffer, onSaveHours, onAddTimeOff, onRemoveTimeOff }: Props) {
+export function AvailabilityEditor({ hours: initial, timeOff, timezone, rules: savedRules, onSaveRules, onSaveHours, onAddTimeOff, onRemoveTimeOff }: Props) {
+  const [rules, setRules] = useState<BookingRules>(savedRules);
+  const savedRulesKey = JSON.stringify(savedRules);
+  useEffect(() => { setRules(JSON.parse(savedRulesKey)); }, [savedRulesKey]);
+  const rulesDirty = JSON.stringify(rules) !== savedRulesKey;
+  const buffer = savedRules.buffer_min;
   const [hours, setHours] = useState<WeekHours>(initial);
   // Follow saved hours when they change (after a save, refresh or demo reset) without losing the status message.
   const savedHours = JSON.stringify(initial);
@@ -52,6 +59,14 @@ export function AvailabilityEditor({ hours: initial, timeOff, timezone, buffer, 
       <button className="button" disabled={busy || !dirty || invalid} onClick={() => run(() => onSaveHours(hours), 'Hours saved. New bookings follow these times.')}>Save hours</button>
       {dirty && <button className="button button-outline" disabled={busy} onClick={() => setHours(initial)}>Undo changes</button>}
     </div>
+
+    <h3 className="availability-subheading">Booking rules</h3>
+    <div className="editor-two">
+      <label className="editor-field"><span>Break between clients</span><select value={rules.buffer_min} onChange={e => setRules({ ...rules, buffer_min: Number(e.target.value) })}>{[0, 15, 30, 45, 60, 90, 120].map(m => <option key={m} value={m}>{m === 0 ? 'No break' : `${m} minutes`}</option>)}</select></label>
+      <label className="editor-field"><span>Book at least this far ahead</span><select value={rules.minimum_notice_hours} onChange={e => setRules({ ...rules, minimum_notice_hours: Number(e.target.value) })}>{[24, 48, 72, 96, 168].map(h => <option key={h} value={h}>{h === 168 ? '1 week' : `${h / 24} ${h === 24 ? 'day' : 'days'} (${h} hours)`}</option>)}</select></label>
+      <label className="editor-field"><span>Clients can book up to</span><select value={rules.window_days} onChange={e => setRules({ ...rules, window_days: Number(e.target.value) })}>{[7, 14, 21, 30, 45, 60].map(d => <option key={d} value={d}>{d} days ahead</option>)}</select></label>
+    </div>
+    <div className="admin-actions"><button className="button" disabled={busy || !rulesDirty} onClick={() => run(() => onSaveRules(rules), 'Booking rules saved.')}>Save booking rules</button></div>
 
     <h3 className="availability-subheading">Blocked dates & times</h3>
     <p className="muted">Days off, holidays, or a few hours you want to keep free. Blocked times never show as available.</p>

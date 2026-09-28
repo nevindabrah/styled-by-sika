@@ -17,7 +17,7 @@ if (result.error) { console.error(result.error.message); process.exit(1); }
 console.log(`${user ? 'Updated' : 'Created'} sign-in for ${email}.`);
 if (!password) {
  const site = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
- const { data, error } = await auth.generateLink({ type: 'magiclink', email, options: { redirectTo: `${site}/auth/callback` } });
+ const { data, error } = await auth.generateLink({ type: 'magiclink', email });
  if (error) { console.error(`Could not make a sign-in link: ${error.message}`); process.exit(1); }
- console.log(`One-time sign-in link (expires in about an hour, works once):\n${data.properties.action_link}\nAfter signing in she sets her password under Availability → Your sign-in.`);
+ console.log(`One-time sign-in link for ${site} (expires in about an hour, works once):\n${site}/auth/confirm?token_hash=${data.properties.hashed_token}&type=magiclink\nIt opens her dashboard at Your sign-in, where she chooses her password.`);
 }

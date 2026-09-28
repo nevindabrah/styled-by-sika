@@ -1,4 +1,5 @@
 import nextEnv from '@next/env';
+import { randomUUID } from 'node:crypto';
 import { createClient } from '@supabase/supabase-js';
 import { extraRow, serviceRow } from '../lib/seed.ts';
 import { defaultContent } from '../lib/content.ts';
@@ -13,7 +14,8 @@ const entries = [
  ['categories', content.categories, 'slug'],
  ['styles', content.services.map(serviceRow), 'id'],
  ['addons', content.extras.map(extraRow), 'id'],
- ['style_photos', content.photos.map(p => ({ ...p, id: undefined })), 'url'],
+ // Built-in photos get real ids; the unique URL keeps reruns from duplicating them.
+ ['style_photos', content.photos.map(p => ({ ...p, id: randomUUID() })), 'url'],
  ['site_content', [{ key: 'text', value: content.text }], 'key'],
  ['business_settings', [{ id: 1, timezone: 'America/Toronto', deposit_cents: content.text.depositCents, deposit_instructions: content.text.depositSummary, prices_confirmed: true, hours_confirmed: false, policies_confirmed: true }], 'id'],
  ['working_hours', Array.from({ length: 7 }, (_, weekday) => ({ weekday, open_time: null, close_time: null })), 'weekday'],

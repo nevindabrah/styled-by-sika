@@ -11,27 +11,28 @@ const settingsKey = 'styled-by-sika-demo-availability';
 export const demoTimezone = 'America/Toronto', demoBuffer = 30, demoNoticeHours = 24, demoWindowDays = 60;
 
 // Demonstration fixtures only: these are not the braider's real hours. She edits them in the demo dashboard.
-export type DemoAvailability = { hours: WeekHours; timeOff: TimeOff[] };
+export type DemoAvailability = { hours: WeekHours; timeOff: TimeOff[]; rules: { buffer_min: number; minimum_notice_hours: number; window_days: number } };
 export const sampleAvailability = (): DemoAvailability => ({
   hours: [{ open: null, close: null }, ...Array.from({ length: 6 }, () => ({ open: '09:00', close: '20:00' }))],
   timeOff: [],
+  rules: { buffer_min: demoBuffer, minimum_notice_hours: demoNoticeHours, window_days: demoWindowDays },
 });
 export function readDemoAvailability(): DemoAvailability {
   if (typeof window === 'undefined') return sampleAvailability();
-  try { const saved = sessionStorage.getItem(settingsKey); return saved ? JSON.parse(saved) : sampleAvailability(); }
+  try { const saved = sessionStorage.getItem(settingsKey); return saved ? { ...sampleAvailability(), ...JSON.parse(saved) } : sampleAvailability(); }
   catch { return sampleAvailability(); }
 }
 export function saveDemoAvailability(settings: DemoAvailability) { sessionStorage.setItem(settingsKey, JSON.stringify(settings)); }
 
 // Same rules as the live site: her hours, minus time off and every saved appointment plus the clean-up buffer.
 export function demoSlots(date: string, duration: number): string[] {
-  const { hours, timeOff } = readDemoAvailability();
+  const { hours, timeOff, rules } = readDemoAvailability();
   const day = hours[weekdayOf(date)];
   const busy = [
     ...readDemoBookings().filter(b => b.status !== 'cancelled').map(b => ({ start: b.start_at, end: b.end_at })),
     ...timeOff.map(t => ({ start: t.start_at, end: t.end_at })),
   ];
-  return slotsForDay({ date, open: day?.open ?? null, close: day?.close ?? null, timezone: demoTimezone, duration, buffer: demoBuffer, busy, now: new Date(), noticeHours: demoNoticeHours, windowDays: demoWindowDays });
+  return slotsForDay({ date, open: day?.open ?? null, close: day?.close ?? null, timezone: demoTimezone, duration, buffer: rules.buffer_min, busy, now: new Date(), noticeHours: rules.minimum_notice_hours, windowDays: rules.window_days });
 }
 
 export function sampleBookings(): Booking[] {

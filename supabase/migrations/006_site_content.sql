@@ -21,6 +21,8 @@ create table if not exists public.style_photos(
  sort_order int not null default 0,
  created_at timestamptz default now()
 );
+-- The seed matches built-in photos by URL.
+create unique index if not exists style_photos_url_key on public.style_photos(url);
 create table if not exists public.site_content(
  key text primary key,
  value jsonb not null,
