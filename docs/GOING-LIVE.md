@@ -26,7 +26,7 @@ After this, `npm run dev` runs against the real database. Sign in at `/login`; e
 ## 3. Vercel (10 minutes)
 
 1. Push this repo to GitHub, then vercel.com → **Add New Project** → import it. Framework is detected automatically.
-2. **Environment Variables**: paste every non-empty line from `.env.local` except `DATABASE_URL` (only the scripts need it). Set `NEXT_PUBLIC_SITE_URL` to the Vercel address (or the custom domain once attached) and leave `BOOKING_ENABLED=false` for the first deploy.
+2. **Environment Variables**: run `npm run env:vercel -- https://<your-address>` to write `.env.vercel` (everything the site needs from `.env.local`, without `DATABASE_URL`, values never printed). Open it, copy all, paste into the first *Key* box in Vercel, save, then delete the file. `NEXT_PUBLIC_*` values are built into the site, so redeploy after changing them. Keep `BOOKING_ENABLED=false` for the first deploy.
 3. Deploy. Check the site, sign in at `/admin`, upload a photo, change a price.
 
 ## 4. Switch on online booking
