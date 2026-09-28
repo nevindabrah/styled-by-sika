@@ -4,11 +4,11 @@ This is your guide to running the website yourself. Nothing here needs a develop
 
 ## Signing in
 
-**The first time:** open the one-time sign-in link you were sent. It logs you straight in. Then go to **Availability**, scroll to **Your sign-in**, and choose your password.
+**The first time:** open the one-time sign-in link you were sent and tap **Continue to my dashboard**. You land on **Your sign-in**, where you choose your password.
 
 **After that:** open your website, scroll to the bottom and tap **Braider sign in** (or go to `/admin`). Sign in with **styledbysika@gmail.com** and your password. You can change your password any time under **Your sign-in**.
 
-**Forgot your password?** On the sign-in page tap **Forgot your password?**, enter your email and tap **Email me a link**. Open the email on any device (check spam if it isn't there within a few minutes): the link signs you in and opens **Your sign-in**, where you choose a new password. Each link works once and expires after an hour.
+**Forgot your password?** On the sign-in page tap **Forgot your password?**, enter your email and tap **Email me a link**. Open the email on any device (check spam if it isn't there within a few minutes), tap the link, then **Continue to my dashboard**: you land on **Your sign-in**, where you choose a new password. Each link works once and expires after an hour.
 
 Only your email address can get in. Clients never see this area.
 
@@ -66,7 +66,7 @@ Automatic confirmation emails and reminders are built in and switch on once an e
 ## Your phone number and e-transfer details
 
 Under **Website → Text**:
-- **Phone number for texts** (Contact): clients get a **Text Sika your booking** button that opens their Messages app with everything written. Without it, step ① uses Instagram or email.
+- **Phone number for texts** (Contact): clients get a **Send as a text message** button that opens their Messages app with everything written. Without it, step ① uses Instagram or email.
 - **E-transfer to** (Deposit): the email or number clients send the deposit to. It appears in step ② with a Copy button and their booking reference. Without it, step ② says you'll reply with where to send it.
 
 ## Deposits and payments
