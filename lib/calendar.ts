@@ -3,6 +3,7 @@ import { JWT } from 'google-auth-library';
 import type { Booking } from './types';
 import type { Busy } from './availability';
 const root='https://www.googleapis.com/calendar/v3';
+export const calendarConfigured=()=>Boolean(process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL&&process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY&&process.env.GOOGLE_CALENDAR_ID);
 async function calendarRequest(path:string,init:RequestInit={}){
  const auth=new JWT({email:process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,key:process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY?.replace(/\\n/g,'\n'),scopes:['https://www.googleapis.com/auth/calendar']});
  const token=await auth.getAccessToken();
@@ -10,13 +11,15 @@ async function calendarRequest(path:string,init:RequestInit={}){
 }
 const cache=new Map<string,{until:number;busy:Busy[]}>();
 export async function getBusy(start:Date,end:Date,fresh=false):Promise<Busy[]>{
+ if(!calendarConfigured())return [];
  const key=`${start.toISOString()}/${end.toISOString()}`;const cached=cache.get(key);if(!fresh && cached && cached.until>Date.now())return cached.busy;
  const res=await calendarRequest('/freeBusy',{method:'POST',body:JSON.stringify({timeMin:start.toISOString(),timeMax:end.toISOString(),items:[{id:process.env.GOOGLE_CALENDAR_ID}]})});
  if(!res.ok)throw new Error('Calendar unavailable.');const data=await res.json();const cal=data.calendars?.[process.env.GOOGLE_CALENDAR_ID!];if(!cal || cal.errors?.length)throw new Error('Calendar unavailable.');
  if(cache.size>120)cache.clear();cache.set(key,{until:Date.now()+60000,busy:cal.busy});return cal.busy;
 }
 export const eventId=(booking:Booking)=>`mb${booking.id.replaceAll('-','')}`;
-export async function syncCalendar(booking:Booking){
+export async function syncCalendar(booking:Booking):Promise<{id:string|null;url:string|null}>{
+ if(!calendarConfigured())return {id:null,url:null};
  const id=eventId(booking),path=`/calendars/${encodeURIComponent(process.env.GOOGLE_CALENDAR_ID!)}/events`;
  if(booking.status==='cancelled') {const res=await calendarRequest(`${path}/${id}`,{method:'DELETE'});if(!res.ok&&res.status!==404&&res.status!==410)throw new Error('Calendar cancellation failed.');cache.clear();return {id,url:null};}
  const s=booking.snapshot;

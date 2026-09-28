@@ -9,8 +9,10 @@ describe('live booking configuration',()=>{
   expect(bookingConfigurationIssues(settings,{...env,NEXT_PUBLIC_DEMO_MODE:'true'})).toContain('Demo mode is enabled.');
   expect(bookingConfigurationIssues(settings,{...env,SUPABASE_SERVICE_ROLE_KEY:''})).toContain('Missing SUPABASE_SERVICE_ROLE_KEY.');
  });
- it('requires actual policy text even when approval flags are set',()=>{
-  expect(bookingConfigurationIssues({...settings,cancellation_policy:null},env)).toContain('Enter cancellation, lateness and guest policies.');
+ it('treats Google Calendar and Upstash as optional but all-or-nothing',()=>{
+  expect(bookingConfigurationIssues(settings,env)).toEqual([]);
+  expect(bookingConfigurationIssues(settings,{...env,GOOGLE_CALENDAR_ID:'cal'})).toContain('Google Calendar needs all three GOOGLE_* values, or none.');
+  expect(bookingConfigurationIssues(settings,{...env,UPSTASH_REDIS_REST_URL:'u'})).toContain('Upstash needs both URL and token, or neither.');
  });
  it('blocks unapproved prices and local callback URLs',()=>{
   expect(bookingConfigurationIssues({...settings,prices_confirmed:false},{...env,NEXT_PUBLIC_SITE_URL:'http://localhost:3000'})).toEqual(expect.arrayContaining(['Prices need approval.','Set an HTTPS public site URL.']));

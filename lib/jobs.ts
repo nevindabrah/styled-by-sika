@@ -24,7 +24,7 @@ export async function processJob(target?:string){
  // If cancellation won the race, do not send an obsolete booking/deposit message.
  if(b.status!=='cancelled'||job.kind==='cancelled'){
  const sent=await resend.emails.send({from:process.env.FROM_EMAIL!,to:b.client_email,subject,text,...(job.kind==='created'?{attachments:[{filename:'styled-by-sika.ics',content:Buffer.from(makeICS(b)).toString('base64')}]}:{})},{idempotencyKey:`${job.id}-client`});if(sent.error)throw new Error(sent.error.message);
- if(job.kind==='created') {const sent=await resend.emails.send({from:process.env.FROM_EMAIL!,to:process.env.BRAIDER_EMAIL!,subject:`New booking · ${b.reference}`,text:`${summary}\n${b.client_name}\n${b.client_phone}\n${b.client_email}\n${b.client_instagram??''}\nRequests: ${b.client_notes||'None'}\n${process.env.NEXT_PUBLIC_SITE_URL}/admin/bookings/${b.id}\n${event.url}`},{idempotencyKey:`${job.id}-braider`});if(sent.error)throw new Error(sent.error.message);}
+ if(job.kind==='created') {const sent=await resend.emails.send({from:process.env.FROM_EMAIL!,to:process.env.BRAIDER_EMAIL!,subject:`New booking · ${b.reference}`,text:`${summary}\n${b.client_name}\n${b.client_phone}\n${b.client_email}\n${b.client_instagram??''}\nRequests: ${b.client_notes||'None'}\n${process.env.NEXT_PUBLIC_SITE_URL}/admin/bookings/${b.id}${event.url?`\n${event.url}`:''}`},{idempotencyKey:`${job.id}-braider`});if(sent.error)throw new Error(sent.error.message);}
  }
  const {error:doneError}=await client.from('booking_jobs').update({completed_at:new Date().toISOString(),lease_until:null,last_error:null}).eq('id',job.id);if(doneError)throw doneError;
  const {error:syncError}=await client.from('bookings').update({sync_state:'synced'}).eq('id',b.id);if(syncError)throw syncError;

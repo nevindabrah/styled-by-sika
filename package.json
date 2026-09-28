@@ -13,7 +13,9 @@
     "test:e2e": "playwright test",
     "db:seed": "node --experimental-strip-types --import ./scripts/ts-resolve.mjs scripts/supabase-seed.mjs",
     "check:launch": "node --experimental-strip-types --import ./scripts/ts-resolve.mjs scripts/check-launch.mjs",
-    "test:unit": "vitest run"
+    "test:unit": "vitest run",
+    "db:migrate": "node --import ./scripts/ts-resolve.mjs scripts/db-migrate.mjs",
+    "admin:create": "node scripts/create-admin.mjs"
   },
   "dependencies": {
     "@fontsource-variable/dm-sans": "^5.3.0",
@@ -44,6 +46,7 @@
     "@types/node": "^22.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
+    "pg": "^8.23.0",
     "tailwindcss": "^4.1.0",
     "typescript": "^5.9.0",
     "vitest": "^3.2.0"

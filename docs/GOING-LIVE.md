@@ -1,43 +1,54 @@
-# Connect Styled by Sika to real services
+# Going live
 
-## Supabase
+Two services are required: **Supabase** (database, sign-in, photo storage) and **Resend** (emails). Hosting is **Vercel**. Google Calendar and Upstash are optional and can be added later without code changes.
 
-1. Create Sika's Supabase project. The owner should retain access to the account.
-2. In the project's SQL Editor, run `supabase/schema.sql` once on a fresh project. On an existing project, do not re-run the initial schema.
-3. Apply `supabase/migrations/002_launch_settings.sql`, `003_service_menu.sql`, `004_duration_ranges.sql`, `005_time_off.sql` and `006_site_content.sql` in order, to both new and existing projects. Migration 003 turns the old style/length/size grid into Sika's flat service menu (services stay in `styles`, add-ons in `addons`).
-4. Add the project URL, anon/publishable key and server service-role/secret key to `.env.local` using the variable names in `.env.example`. Never put the server key in a `NEXT_PUBLIC_` variable.
-5. Run `npm run db:seed`. This creates the public `photos` storage bucket and inserts Sika's menu, categories, photos, website text, deposit, business settings and seven closed weekdays. It never overwrites rows she has edited or adds fake bookings.
-6. Sika edits everything else herself once she can sign in: prices, services, categories, add-ons, photos and text at `/admin/content`, hours and blocked dates at `/admin/settings` (saving hours also marks `hours_confirmed`). Give her `docs/OWNER-GUIDE.md`. Nothing needs Supabase Studio after seeding. Monetary values are integer Canadian cents. Prices already match the menu Sika supplied; the website reads them from `lib/menu.ts` until Supabase is connected, and from the database afterwards.
-7. Enter `deposit_cents`, `deposit_instructions`, `cancellation_policy`, `lateness_policy` and `guest_policy`. Approve `prices_confirmed`, `hours_confirmed` and `policies_confirmed` only after Sika agrees to those values. All seven weekdays must exist; use null opening and closing times for closed days.
-8. Create the braider's user in Supabase Auth and set `ADMIN_EMAIL` to that address. Only that email can open `/admin` (middleware and every admin API check it); clients never see the dashboard. Set and set the production site URL and `/auth/callback` redirect in Supabase Auth settings. Add the same credentials to the hosting environment.
+## 1. Supabase (10 minutes)
 
-The app reads the catalog, working hours, settings, bookings, jobs, FAQs and gallery records from Supabase when configured. Bookings use server routes with a service key; browser roles have no access to appointment records or operational settings. The authenticated admin dashboard manages bookings. Use Supabase Studio for catalog, hours and policies.
+1. Sign in at supabase.com → **New project**. Name it `styled-by-sika`, region *Canada (Central)*, and save the database password somewhere safe.
+2. **Project Settings → API**: copy *Project URL*, *anon public* key and *service_role* key into `.env.local` as `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`.
+3. **Project Settings → Database → Connection string → URI**: copy it, replace `[YOUR-PASSWORD]` with the database password, and put it in `.env.local` as `DATABASE_URL`.
+4. Set `ADMIN_EMAIL` in `.env.local` to the email Sika will sign in with.
+5. Run, in order:
+   ```bash
+   npm run db:migrate                          # schema + all migrations, safe to rerun
+   npm run db:seed                             # menu, text, photos, photo bucket; never overwrites her edits
+   npm run admin:create -- sika@email.com "a strong password"
+   ```
+6. **Authentication → URL Configuration**: set *Site URL* to the public address (step 3 below) and add `https://<your-domain>/auth/callback` to *Redirect URLs*, so "Email me a sign-in link" works.
 
-Photos she uploads from the dashboard go to the public `photos` bucket (created by the seed) through the server with the service key; anonymous uploads are not possible. Booking records and customer information must never go in this bucket.
+After this, `npm run dev` runs against the real database. Sign in at `/login`; everything in Website and Availability is now saved to Supabase.
 
-## Calendar, email and request protection
+## 2. Resend (5 minutes)
 
-- Share the booking Google Calendar with the configured service-account email, with permission to manage events. Set the service-account email, private key and calendar ID.
-- Verify the sending domain in Resend and set `RESEND_API_KEY`, `FROM_EMAIL`, `BRAIDER_EMAIL`, and `MAINTAINER_EMAIL`.
-- Configure Upstash REST credentials. The current rate limiter uses Vercel's trusted IP header; adapt it if using a different hosting provider.
-- Set a strong random `CRON_SECRET`. Schedule an HTTPS GET to `/api/jobs` every minute with `Authorization: Bearer <CRON_SECRET>`. This retries calendar/email work after outages. Use a scheduler that supports your required frequency.
-- Set `NEXT_PUBLIC_SITE_URL` to the real HTTPS domain and `NEXT_PUBLIC_DEMO_MODE=false`. Restart/rebuild after changing public environment variables.
-- Instagram and email are set in `lib/business.ts`.
+1. resend.com → add and verify the domain the emails will come from (or use the Resend test domain to try it first).
+2. **API Keys → Create** → `RESEND_API_KEY`. Set `FROM_EMAIL` (an address on the verified domain) and `BRAIDER_EMAIL` (where Sika receives booking notices).
+
+## 3. Vercel (10 minutes)
+
+1. Push this repo to GitHub, then vercel.com → **Add New Project** → import it. Framework is detected automatically.
+2. **Environment Variables**: paste every non-empty line from `.env.local` except `DATABASE_URL` (only the scripts need it). Set `NEXT_PUBLIC_SITE_URL` to the Vercel address (or the custom domain once attached) and leave `BOOKING_ENABLED=false` for the first deploy.
+3. Deploy. Check the site, sign in at `/admin`, upload a photo, change a price.
+
+## 4. Switch on online booking
+
+1. Sika saves her weekly hours once in **Availability** (this records her approval of them).
+2. Run `npm run check:launch` locally with `BOOKING_ENABLED=true` and `NEXT_PUBLIC_SITE_URL` set to the https address. Fix anything it lists.
+3. In Vercel set `BOOKING_ENABLED=true` and redeploy. Make a test booking with a real email, confirm the emails arrive, mark the deposit paid in the dashboard, and cancel it.
+
+Until step 4, `/book` still shows prices and sends requests to Sika by Instagram DM or email.
+
+## Optional extras
+
+- **Google Calendar**: create a service account, share her calendar with it (manage events), set the three `GOOGLE_*` values, redeploy. Bookings then appear on her calendar and her calendar's busy times block the site.
+- **Upstash**: create a Redis database and set the two `UPSTASH_*` values for rate limiting across servers.
+- **Retries**: set `CRON_SECRET` and schedule `GET /api/jobs` every few minutes with `Authorization: Bearer <secret>` (Vercel Cron works) so a failed email or calendar update is retried.
 
 ## Payments
 
-Stripe Checkout is **not implemented in this version**. Existing live booking code saves an appointment request to Supabase and provides manual payment instructions; the braider marks the deposit paid after verifying receipt. That is not automatic online payment processing.
+Clients pay the deposit by cash or e-transfer; Sika marks it paid in the dashboard. No card processing is built in.
 
-Before implementing Stripe, confirm whether clients pay a fixed deposit or the full appointment price, the approved amount, and cancellation/refund rules. Sika needs a verified Stripe account and test credentials. A production integration must create Checkout from the server-calculated quote, confirm payments using signed webhooks, prevent duplicate booking/payment creation, handle abandoned checkout holds, and test payment failures and refunds. Do not treat a browser redirect as proof of payment.
+## Security notes
 
-Stripe test/live keys must remain server-side. Do not post secret keys in chat. Start with Stripe test mode before enabling live charges.
-
-## Verify and enable
-
-- `npm run test:unit` checks database permissions, overlap protection, cancellation and configuration guards using a local PostgreSQL-compatible test database.
-- `npm run check:launch` checks configuration and, when credentials are available, reads the real Supabase tables and verifies anonymous booking access is denied. It does not send email, charge cards or create appointments.
-- Approve the business settings and set `BOOKING_ENABLED=true` only for the intended launch. Run the check again.
-- Verify a real test appointment is persisted, shown in the protected dashboard, synchronized to Google Calendar, and emailed successfully. Verify competing requests cannot claim the same slot, retries do not duplicate bookings, cancellation updates the calendar, and the job scheduler retries failures.
-- Verify the chosen payment flow separately. Passing configuration checks is not a payment certification or proof of external service delivery.
-
-`npm run demo:build` / `npm run demo` intentionally keep the private demo separate on port 3002. Demo bookings remain labeled and simulated. `npm run dev` no longer silently enables demo mode when database credentials are missing. The client-facing site never pretends a simulated booking or email was real.
+- `.env.local` is git-ignored. The service-role key and `DATABASE_URL` must never be exposed to the browser or committed.
+- Only `ADMIN_EMAIL` can open `/admin` or call the admin APIs; browser roles cannot read bookings, settings or content tables.
+- Photos she uploads go to the public `photos` bucket through the server; nothing else is publicly writable.

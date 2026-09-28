@@ -8,7 +8,7 @@ import { availableSlots } from '@/lib/live-availability';
 import { rateLimit } from '@/lib/rate-limit';
 import { processJob } from '@/lib/jobs';
 export const maxDuration=60;
-const receipt=(b:Record<string,unknown>)=>({id:b.id,reference:b.reference,start_at:b.start_at,end_at:b.end_at,price_cents:b.price_cents,duration_min:b.duration_min,snapshot:b.snapshot,calendarSaved:!!b.google_event_id,emailSent:b.sync_state==='synced'});
+const receipt=(b:Record<string,unknown>)=>({id:b.id,reference:b.reference,start_at:b.start_at,end_at:b.end_at,price_cents:b.price_cents,duration_min:b.duration_min,snapshot:b.snapshot,calendarSaved:['calendar_saved','synced'].includes(String(b.sync_state)),emailSent:b.sync_state==='synced'});
 export async function POST(request:Request){
  try{
  const parsed=bookingSchema.safeParse(await request.json());if(!parsed.success)return NextResponse.json({error:'Please check your details and service choice.'},{status:400});
@@ -25,6 +25,6 @@ export async function POST(request:Request){
  if(error){if(error.code==='23P01')return NextResponse.json({error:'That time has just been taken. Please choose another.'},{status:409});if(error.code==='23505'){const {data}=await client.from('bookings').select('*').eq('idempotency_key',input.idempotencyKey).maybeSingle();if(data)return NextResponse.json(receipt(data));}throw error;}
  await processJob(id);
  const {data:updated}=await client.from('bookings').select('*').eq('id',id).single();
- return NextResponse.json(receipt(updated??booking),{status:updated?.google_event_id?201:202});
+ return NextResponse.json(receipt(updated??booking),{status:['calendar_saved','synced'].includes(updated?.sync_state)?201:202});
  }catch{return NextResponse.json({error:'We could not finish your request. Retry with the same details; your request will not be duplicated.'},{status:503});}
 }
