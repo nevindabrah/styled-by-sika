@@ -510,3 +510,13 @@ test('she plans a week months ahead; clients book it and a 6-hour booking blocks
   const times = await day.isEnabled() ? (await day.click(), await page.getByRole('button', { name: /^\d{1,2}:\d{2} [AP]M$/ }).allTextContents()) : [];
   expect(times.filter(t => /^(12|[1-5]):\d\d PM$/.test(t))).toEqual([]);
 });
+
+test('her photo is on the right of the welcome card on phones, tablets and laptops', async ({ page }) => {
+  for (const [width, height] of [[375, 812], [768, 1024], [1440, 900]]) {
+    await page.setViewportSize({ width, height });
+    await page.goto('/');
+    const card = await page.locator('#meet-sika').boundingBox(), photo = await page.locator('#meet-sika .braider-portrait').boundingBox();
+    expect(photo!.x + photo!.width / 2, `${width}px`).toBeGreaterThan(card!.x + card!.width / 2);
+    expect(photo!.x + photo!.width, `${width}px`).toBeLessThanOrEqual(card!.x + card!.width);
+  }
+});

@@ -807,3 +807,9 @@ html { overflow-x: hidden; overflow-x: clip; }
 .day-source.is-planned { background: #b3a0ff26; color: var(--accent); }
 .repeat-weeks { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--muted); }
 .repeat-weeks select { width: auto; min-height: 44px; padding: 8px 10px; font-size: 15px; }
+
+/* Her photo sits on the right of the welcome card at every screen size, with the text flowing beside it. */
+.braider-intro { display: flow-root; }
+.braider-intro .braider-portrait { float: right; width: 150px; margin: 0 0 16px 20px; }
+@media (max-width: 760px) { .braider-intro .braider-portrait { width: 118px; margin: 0 0 14px 16px; } }
+@media (min-width: 761px) and (max-width: 1100px) { .braider-intro .braider-portrait { width: 116px; margin: 0 0 14px 16px; } }
