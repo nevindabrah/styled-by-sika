@@ -51,6 +51,10 @@ The line under your name, the welcome message, every policy (deposit, payment, c
 
 Clients only see start times inside your hours that leave room for the whole appointment plus your break before the next client. Every booked appointment removes its full length from the calendar automatically. Cancelling a booking frees the time again.
 
+## What clients receive
+
+When someone books online they get an email (and a text, if texting is switched on) confirming the request and explaining the deposit. When you tap **Mark deposit paid** they get a confirmation. Everyone is reminded **24 hours before** and again **2 hours before** their appointment, with your hair-prep instructions in the first reminder. If you cancel a booking, they are told straight away. Each booking shows whether its reminders have gone out.
+
 ## Deposits and payments
 
 Clients pay you directly by cash or e-transfer. When a deposit arrives, open the booking and tap **Mark deposit paid**; the client gets a confirmation email and the appointment turns green in your calendar.

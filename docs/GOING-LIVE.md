@@ -1,6 +1,6 @@
 # Going live
 
-Two services are required: **Supabase** (database, sign-in, photo storage) and **Resend** (emails). Hosting is **Vercel**. Google Calendar and Upstash are optional and can be added later without code changes.
+Two services are required: **Supabase** (database, sign-in, photo storage, reminder scheduler) and **Resend** (emails). Hosting is **Vercel**. **Twilio** (text messages), Google Calendar and Upstash are optional and can be added later without code changes.
 
 ## 1. Supabase (10 minutes)
 
@@ -29,7 +29,16 @@ After this, `npm run dev` runs against the real database. Sign in at `/login`; e
 2. **Environment Variables**: run `npm run env:vercel -- https://<your-address>` to write `.env.vercel` (everything the site needs from `.env.local`, without `DATABASE_URL`, values never printed). Open it, copy all, paste into the first *Key* box in Vercel, save, then delete the file. `NEXT_PUBLIC_*` values are built into the site, so redeploy after changing them. Keep `BOOKING_ENABLED=false` for the first deploy.
 3. Deploy. Check the site, sign in at `/admin`, upload a photo, change a price.
 
-## 4. Switch on online booking
+## 4. Reminders scheduler (2 minutes)
+
+Clients get a confirmation when they book, a message when the deposit is marked paid, and reminders **24 hours** and **2 hours** before (by email, and by text once Twilio is set up). Supabase runs the check every 10 minutes:
+
+1. Make sure `CRON_SECRET` is in `.env.local` (any long random string) and add the same value to Vercel: `npm run env:vercel -- https://<your-address> --only=CRON_SECRET` writes just that line to `.env.vercel` to paste.
+2. `npm run cron:setup -- https://<your-address>` — enables `pg_cron`/`pg_net` and schedules `GET /api/jobs` every 10 minutes. Rerun it if the address changes.
+
+The same run retries any confirmation email or text that failed.
+
+## 5. Switch on online booking
 
 1. Sika saves her weekly hours once in **Availability** (this records her approval of them).
 2. Run `npm run check:launch` locally with `BOOKING_ENABLED=true` and `NEXT_PUBLIC_SITE_URL` set to the https address. Fix anything it lists.
@@ -37,11 +46,16 @@ After this, `npm run dev` runs against the real database. Sign in at `/login`; e
 
 Until step 4, `/book` still shows prices and sends requests to Sika by Instagram DM or email.
 
+## Text messages (Twilio)
+
+1. twilio.com → create an account, upgrade from trial (trial accounts can only text verified numbers), and buy a Canadian phone number with SMS (about US$1.15/month; each text is about US$0.01).
+2. Put `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN` and `TWILIO_FROM` (the number as `+1…`, or a Messaging Service SID `MG…`) in `.env.local`, then `npm run env:vercel -- https://<your-address> --only=TWILIO_ACCOUNT_SID,TWILIO_AUTH_TOKEN,TWILIO_FROM`, paste into Vercel and redeploy.
+3. Texts start immediately: confirmations, deposit received, cancellations and both reminders. Clients can reply STOP to opt out (Twilio handles it).
+
 ## Optional extras
 
 - **Google Calendar**: create a service account, share her calendar with it (manage events), set the three `GOOGLE_*` values, redeploy. Bookings then appear on her calendar and her calendar's busy times block the site.
 - **Upstash**: create a Redis database and set the two `UPSTASH_*` values for rate limiting across servers.
-- **Retries**: set `CRON_SECRET` and schedule `GET /api/jobs` every few minutes with `Authorization: Bearer <secret>` (Vercel Cron works) so a failed email or calendar update is retried.
 
 ## Payments
 

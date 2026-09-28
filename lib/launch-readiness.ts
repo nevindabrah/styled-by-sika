@@ -4,11 +4,14 @@ import type { BusinessSettings } from './types';
 export const bookingEnvironmentKeys = [
  'NEXT_PUBLIC_SUPABASE_URL', 'NEXT_PUBLIC_SUPABASE_ANON_KEY', 'SUPABASE_SERVICE_ROLE_KEY', 'ADMIN_EMAIL',
  'RESEND_API_KEY', 'BRAIDER_EMAIL', 'FROM_EMAIL', 'NEXT_PUBLIC_SITE_URL',
+ // Authorises the scheduler that sends reminders and retries (npm run cron:setup).
+ 'CRON_SECRET',
 ] as const;
-// Nice to have; the site works without them (no Google Calendar sync, in-memory rate limiting, no cron retries).
+// Nice to have; the site works without them (no Google Calendar sync, in-memory rate limiting, email-only messages).
 export const optionalEnvironmentKeys = [
  'GOOGLE_SERVICE_ACCOUNT_EMAIL', 'GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY', 'GOOGLE_CALENDAR_ID',
- 'UPSTASH_REDIS_REST_URL', 'UPSTASH_REDIS_REST_TOKEN', 'CRON_SECRET', 'MAINTAINER_EMAIL',
+ 'UPSTASH_REDIS_REST_URL', 'UPSTASH_REDIS_REST_TOKEN', 'MAINTAINER_EMAIL',
+ 'TWILIO_ACCOUNT_SID', 'TWILIO_AUTH_TOKEN', 'TWILIO_FROM',
 ] as const;
 
 export function bookingConfigurationIssues(settings: BusinessSettings | null, env: Record<string, string | undefined>): string[] {
@@ -19,6 +22,8 @@ export function bookingConfigurationIssues(settings: BusinessSettings | null, en
  const google = ['GOOGLE_SERVICE_ACCOUNT_EMAIL', 'GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY', 'GOOGLE_CALENDAR_ID'].filter(k => env[k]?.trim()).length;
  if (google > 0 && google < 3) issues.push('Google Calendar needs all three GOOGLE_* values, or none.');
  if ((env.UPSTASH_REDIS_REST_URL ? 1 : 0) + (env.UPSTASH_REDIS_REST_TOKEN ? 1 : 0) === 1) issues.push('Upstash needs both URL and token, or neither.');
+ const twilio = ['TWILIO_ACCOUNT_SID', 'TWILIO_AUTH_TOKEN', 'TWILIO_FROM'].filter(k => env[k]?.trim()).length;
+ if (twilio > 0 && twilio < 3) issues.push('Text messages need all three TWILIO_* values, or none.');
  if (env.NEXT_PUBLIC_SITE_URL) {
   try { const url = new URL(env.NEXT_PUBLIC_SITE_URL); if(url.protocol!=='https:' || ['localhost','127.0.0.1'].includes(url.hostname)) issues.push('Set an HTTPS public site URL.'); }
   catch { issues.push('Set a valid public site URL.'); }

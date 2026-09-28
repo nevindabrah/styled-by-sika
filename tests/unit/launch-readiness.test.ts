@@ -13,6 +13,8 @@ describe('live booking configuration',()=>{
   expect(bookingConfigurationIssues(settings,env)).toEqual([]);
   expect(bookingConfigurationIssues(settings,{...env,GOOGLE_CALENDAR_ID:'cal'})).toContain('Google Calendar needs all three GOOGLE_* values, or none.');
   expect(bookingConfigurationIssues(settings,{...env,UPSTASH_REDIS_REST_URL:'u'})).toContain('Upstash needs both URL and token, or neither.');
+  expect(bookingConfigurationIssues(settings,{...env,TWILIO_ACCOUNT_SID:'AC1'})).toContain('Text messages need all three TWILIO_* values, or none.');
+  expect(bookingConfigurationIssues(settings,{...env,CRON_SECRET:''})).toContain('Missing CRON_SECRET.');
  });
  it('blocks unapproved prices and local callback URLs',()=>{
   expect(bookingConfigurationIssues({...settings,prices_confirmed:false},{...env,NEXT_PUBLIC_SITE_URL:'http://localhost:3000'})).toEqual(expect.arrayContaining(['Prices need approval.','Set an HTTPS public site URL.']));

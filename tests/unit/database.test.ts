@@ -13,6 +13,7 @@ beforeAll(async()=>{
  await db.exec(readFileSync('supabase/migrations/004_duration_ranges.sql','utf8'));
  await db.exec(readFileSync('supabase/migrations/005_time_off.sql','utf8'));
  await db.exec(readFileSync('supabase/migrations/006_site_content.sql','utf8'));
+ await db.exec(readFileSync('supabase/migrations/007_reminders.sql','utf8'));
  for(const [table,rows] of [['styles',seedCatalog.services.map(serviceRow)],['addons',seedCatalog.extras.map(extraRow)]] as const){
   for(const row of rows){ const keys=Object.keys(row); await db.query(`insert into ${table} (${keys.join(',')}) values (${keys.map((_,i)=>'$'+(i+1)).join(',')})`,Object.values(row)); }
  }
