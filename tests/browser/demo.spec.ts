@@ -7,7 +7,7 @@ async function goToMonth(page: import('@playwright/test').Page, date: Date) {
   const target = date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
   const header = page.locator('.calendar-header strong');
   await expect(header).not.toHaveText('');
-  await expect(page.locator('.fine-print[role=status]')).not.toHaveText('Checking the calendar…');
+  await expect(page.locator('.calendar-loading')).toHaveCount(0, { timeout: 30000 });
   for (let i = 0; i < 14 && (await header.textContent()) !== target; i++) {
     const [m, y] = [(await header.textContent())!, target];
     const later = new Date(`1 ${y}`) > new Date(`1 ${m}`);
@@ -519,4 +519,17 @@ test('her photo is on the right of the welcome card on phones, tablets and lapto
     expect(photo!.x + photo!.width / 2, `${width}px`).toBeGreaterThan(card!.x + card!.width / 2);
     expect(photo!.x + photo!.width, `${width}px`).toBeLessThanOrEqual(card!.x + card!.width);
   }
+});
+
+test('a friendly loading animation shows while the calendar is checked', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/book?service=natural-hair-twists');
+  await page.getByRole('button', { name: 'Choose your time' }).click();
+  const loader = page.locator('.calendar-loading');
+  await expect(loader).toBeVisible();
+  await expect(loader).toContainText('Checking the calendar');
+  await page.screenshot({ path: 'test-results/calendar-loading.png' });
+  await expect(loader.locator('.calendar-loading-word')).toHaveText(/…$/);
+  await expect(loader).toHaveCount(0, { timeout: 30000 });
+  await expect(page.locator('.calendar-grid button:enabled').first()).toBeVisible();
 });
