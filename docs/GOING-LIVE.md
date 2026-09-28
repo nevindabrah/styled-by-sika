@@ -1,5 +1,21 @@
 # Going live
 
+## Current deployment
+
+| | Status |
+| --- | --- |
+| Site | ✅ https://styled-by-sika.vercel.app, auto-deployed from `main` ([Vercel](https://vercel.com/nevindabrahs-projects/styled-by-sika)) |
+| Database, sign-in, photo storage | ✅ Supabase `ioczatwmjnkwaxshycid`, migrations 002–009 applied, content seeded |
+| Braider account | ✅ styledbysika@gmail.com (she has signed in; she chooses her password under Availability → Your sign-in) |
+| Reminder/retry scheduler | ✅ pg_cron every 10 minutes → `/api/jobs` (`CRON_SECRET` in Vercel) |
+| Online booking | ✅ always on; times come from her Availability |
+| "Forgot your password?" emails | ⏳ needs steps 6–8 below in Supabase |
+| Automatic emails (Resend) | Optional, not connected (needs a sending domain) |
+| Texts (Twilio) | Optional, not connected |
+| Google Calendar sync | Optional, not connected |
+
+The rest of this page is the full setup, for reference or for setting up a fresh copy.
+
 Only **Supabase** (database, sign-in, photo storage, scheduler) and **Vercel** (hosting) are required. Booking follows the braider's hours in her dashboard; without an email service, clients see their request on screen and she contacts them. **Resend** (emails), **Twilio** (texts), Google Calendar and Upstash are optional and can be added later without code changes.
 
 ## 1. Supabase (10 minutes)

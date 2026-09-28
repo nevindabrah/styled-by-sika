@@ -1,54 +1,68 @@
 # Styled by Sika
 
-Braiding website for Amewusika Amedeker in Vaughan, Ontario. One page (menu, policies, contact) plus online booking, built with Next.js 15, React 19 and Supabase.
+The booking website for **Styled by Sika**, a braider in Vaughan, Ontario. Clients browse the menu and prices, pick an open time and book; Sika runs everything else (prices, services, photos, wording and availability) from her own dashboard.
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for the development workflow and [docs/](docs/) for context, decisions and the go-live checklist.
+| | |
+| --- | --- |
+| **Live site** | https://styled-by-sika.vercel.app |
+| **Book an appointment** | https://styled-by-sika.vercel.app/book |
+| **Braider dashboard** | https://styled-by-sika.vercel.app/login (styledbysika@gmail.com only) |
+| **Hosting** | [Vercel project](https://vercel.com/nevindabrahs-projects/styled-by-sika) · deploys automatically from `main` |
+| **Database & sign-in** | [Supabase project](https://supabase.com/dashboard/project/ioczatwmjnkwaxshycid) (Canada Central) |
+| **Owner's manual** | [docs/OWNER-GUIDE.md](docs/OWNER-GUIDE.md) |
 
-## Run the full demo
+## What it does
+
+**For clients**
+- One page: welcome, a collapsible service menu (price, time, hair needed, photos that enlarge), add-ons, booking policies and contact.
+- Calendly-style booking: choose a service and extras, pick a day, then a start time. Times come from Sika's start windows, every 30 minutes, whatever the length of the style; appointments never overlap and each is followed by her break.
+- A **Booking confirmed** screen with two steps: send the pre-written booking to Styled by Sika (text, Instagram or email) and send the deposit.
+
+**For Sika** (`/admin`, see the [owner's guide](docs/OWNER-GUIDE.md))
+- **Website:** every piece of text, her photo, categories, services and prices, add-ons and category photos.
+- **Availability:** a week planner for any week up to a year ahead, her usual week, booking rules (break, notice, how far ahead) and blocked dates.
+- **Bookings / Clients:** deposits, completions, no-shows, cancellations and private notes.
+- Her password, with "Forgot your password?" by email.
+
+Built-in, switched on later by adding keys: confirmation emails (Resend), texts (Twilio), reminders 24 hours and 2 hours before, and Google Calendar sync.
+
+## Tech
+
+Next.js 15 (App Router) · React 19 · TypeScript · Tailwind CSS 4 · Supabase (Postgres, Auth, Storage, pg_cron) · Vercel · Vitest + PGlite · Playwright.
+
+## Working on it
 
 ```bash
+nvm use                 # Node 22
 npm install
-npm run demo:build
-npm run demo
+cp .env.example .env.local
 ```
 
-Open http://localhost:3002 (or http://127.0.0.1:3002).
+| Command | What it does |
+| --- | --- |
+| `npm run demo:build && npm run demo` | Self-contained demo on http://localhost:3002 with sample bookings and a demo dashboard at `/demo/admin`. Nothing touches the real database. |
+| `npm run dev` | Development server. **With Supabase keys in `.env.local` this uses the live database**, so use the demo for experiments. |
+| `npm run typecheck` · `npm run test:unit` · `npm run test:e2e` | Checks. Browser tests need the demo build and run at phone, tablet and laptop sizes. |
+| `npm run db:migrate` | Applies `supabase/schema.sql` and every migration in order; safe to rerun. |
+| `npm run db:seed` | Loads the default menu, text and photos; never overwrites her edits. |
+| `npm run admin:create -- <email>` | Creates or updates her sign-in and prints a one-time sign-in link (set `NEXT_PUBLIC_SITE_URL` to the live address first). |
+| `npm run cron:setup -- <site>` | Schedules the 10-minute reminder/retry check in Supabase. |
+| `npm run env:vercel -- <site>` | Writes `.env.vercel` (git-ignored) with the variables Vercel needs, without printing values. |
+| `npm run check:launch` | Lists anything missing for live booking. |
 
-The production demo uses its own `.next-demo` build folder, so it does not conflict with a development server. Fonts and reference photos are hosted locally.
+## Deploying
 
-For development, use `npm run dev` and open the port printed in the terminal. Development uses live-service code by default; simulated bookings require explicit demo mode. Run only one development server per workspace.
+Push to `main`. GitHub Actions runs the typecheck, unit tests, build and browser tests, and Vercel deploys the same commit to https://styled-by-sika.vercel.app. Environment variables live in Vercel (Settings → Environment Variables); `NEXT_PUBLIC_*` values need a redeploy after changing. Apply database migrations with `npm run db:migrate` **before** pushing code that needs them.
 
-## How the site is organized
+## Docs
 
-The public site is one page plus a booking page. Old links (`/pricing`, `/styles/...`, `/gallery`, `/policies`, `/faq`, `/contact`, `/about`) redirect to the matching section.
+- [OWNER-GUIDE.md](docs/OWNER-GUIDE.md): Sika's manual for the dashboard
+- [GOING-LIVE.md](docs/GOING-LIVE.md): services, keys, and what's set up versus optional
+- [CONTRIBUTING.md](CONTRIBUTING.md): where things live, conventions, before-you-push checks
+- [CONTEXT.md](docs/CONTEXT.md): current state of the system
+- [DECISIONS.md](docs/DECISIONS.md): why things are the way they are
+- [ADDING-PHOTOS.md](docs/ADDING-PHOTOS.md) · [PHOTO-CREDITS.md](docs/PHOTO-CREDITS.md)
 
-- `/` — welcome, the service menu (tap a category to open its options, each with price, time, hair needed and a Book button), add-ons, booking policies, and contact. Phones and tablets get a floating Book bar whenever no other Book button is on screen.
-- `/book?service=<slug>&extras=<slug,slug>` — the booking page, pre-filled from the menu. When online booking is off, it shows the price and sends the request to Sika by Instagram DM or email with the details filled in.
+## License
 
-Sika edits the website herself from her dashboard (`/admin` → Website and Availability): text, categories, services and prices, add-ons, photos, weekly hours and blocked dates. `docs/OWNER-GUIDE.md` is her manual. The files `lib/menu.ts`, `lib/business.ts` and `lib/work-photos.ts` hold the defaults that seed the database.
-
-## Demo walkthrough
-
-1. Scroll to the menu, tap a category to open it, then tap **Book** on a service.
-2. Add an extra, then choose a sample day/time. Enter a sample name, phone, and an `example.com` email. Agree to the policies, review, and confirm.
-3. Download the sample calendar file or open the demo dashboard from the confirmation screen.
-4. In the dashboard, open Bookings and find the sample client. Mark a deposit paid, save a private note, or cancel with confirmation.
-5. Open Website to change a price, add a service, edit the welcome text or upload a photo, then reload the site to see it. Open Availability to change the weekly hours or block a day, then start another booking: only the times she allows appear, and any booked appointment (plus her 30-minute break) is gone from the calendar.
-
-Demo bookings are stored in browser session storage and last for that tab's session. They never create Google Calendar events, send emails, or collect deposits. Appointment times and sample clients are demonstration data; prices are Sika's real menu.
-
-## Checks
-
-- `npm run typecheck`
-- `npm run demo:build`
-- `npm run test:e2e` (build the demo first; uses installed Google Chrome on macOS, or set `CHROME_PATH`)
-
-Browser tests cover every route at 390px, 768px, and 1440px, the complete menu and policies text, redirects from old pages, section navigation and collapsible categories, the phone Book bar, menu-to-booking handoff with extras and price ranges, booking validation and confirmation, calendar download, dashboard actions, admin protection, 404 pages, and theme persistence. Unit tests cover pricing (fixed, ranged and open-ended extras) and the database migration.
-
-## Live launch still needs configuration
-
-See `docs/GOING-LIVE.md`, `.env.example`, `supabase/schema.sql` and `supabase/migrations/`. Live booking stays off until credentials and working hours are configured. Until then the booking page sends requests to Sika by Instagram or email. Create the braider's Supabase account and configure `ADMIN_EMAIL`; real `/admin` routes remain protected. The public demo dashboard is separate at `/demo/admin` and is unavailable when demo mode is off.
-
-Live Google Calendar, Supabase, Resend, and rate-limit integration have not been verified against real accounts. Database seeding and configuration checks are available through `npm run db:seed` and `npm run check:launch`; real account verification and retry scheduling remain launch work. This build is ready to publish as a menu-and-request site; calendar-based online booking is separate launch work.
-
-Sika's portrait and knotless photographs are installed. The portrait has a separate shadow-retouched copy; the original is preserved. Photo provenance is documented in `docs/PHOTO-CREDITS.md`.
+All rights reserved. See [LICENSE](LICENSE).

@@ -1,45 +1,33 @@
 # Current state
 
-Business name: **Styled by Sika**, confirmed by owner. Braider: Amewusika Amedeker. Location: Vaughan, Ontario. Timezone: America/Toronto. Use “extensions” in customer copy, not “bundles” (legacy database column `bundles_needed` retained).
+**Live:** https://styled-by-sika.vercel.app. Braider: Amewusika (Sika) Amedeker, Vaughan, Ontario (America/Toronto). Business name: Styled by Sika. Instagram @styledby.sika, styledbysika@gmail.com. In customer copy, say "extensions", not "bundles" (the legacy database column `bundles_needed` is kept).
 
-## Demo status
+## Services in use
 
-Production demo build passes and runs with `npm run demo` on port 3002 after `npm run demo:build`. `.next-demo` is separate from `.next`. Local fonts remove Google Fonts network dependency. An extra agent-started development server was stopped to prevent shared-cache contention.
+- **Vercel** hosts the site and deploys `main` automatically; GitHub Actions runs checks on every push.
+- **Supabase** (project `ioczatwmjnkwaxshycid`, Canada Central): Postgres, Auth (only `ADMIN_EMAIL` = styledbysika@gmail.com may use `/admin`), Storage bucket `photos`, and pg_cron + pg_net calling `GET /api/jobs` every 10 minutes (`styled-by-sika-jobs`). Migrations 002–009 are applied.
+- Not connected yet (built in, optional): Resend email, Twilio texts, Google Calendar, Upstash. Without email/texts, clients confirm on screen and message her; reminders stay off.
 
-## Site structure (September 2026)
+## Public site
 
-One public page (`/`) with sections `#meet-sika`, `#services` (collapsible categories `#menu-knotless`, `#menu-boho`, `#menu-miracle-knots`, `#menu-twists`, `#menu-invisible-locs`, `#menu-soft-locs`, `#menu-extras`; a hash for a category or service slug opens it), `#before-you-book` and `#contact`, plus `/book`. Content sources: `lib/menu.ts` (27 services, 6 add-ons, owner's prices and durations; miracle knots have hour ranges and the calendar blocks the longer figure), `lib/business.ts` (owner's welcome, policies, contact), `lib/work-photos.ts` (her photos per category). The database keeps table names `styles`/`addons`; migration 003 adds category, description, price range and bookable columns and retires the starter catalog.
+One page (`/`) plus `/book`. Sections: `#meet-sika` (welcome card, her photo on the right at every size), `#services` (collapsible categories, one open at a time, with the tapped row kept still; photos open full screen), `#before-you-book`, `#contact`. Old routes redirect to sections. Everything public renders from `SiteContent` (`lib/content.ts`) via `getContent()`; client components apply demo edits through `useSiteContent`.
 
-Header shows three section links plus Book now (chips row on phones). Categories start closed and open on tap (one at a time); each service card has a Book button linking to `/book?service=<slug>`. On screens up to 1000px a floating Book bar shows only while no Book button is on screen. When live booking is off, `/book` quotes the price and offers "Book on Instagram" (copies the request to the clipboard, opens the DM) and "Book by email" (pre-filled mailto).
+Booking is always real (Calendly-style): service + extras → a day → a start time → details → **Booking confirmed** with two steps (send the pre-written booking to Styled by Sika; send the deposit). The calendar loads one month per request (`/api/availability?month=`), opens on the first month with times, and shows a playful loading animation (`components/calendar-loading.tsx`).
 
-Demo mode is explicit in production (`NEXT_PUBLIC_DEMO_MODE=true`) and automatic in development when no Supabase URL is configured. Sample appointments persist in sessionStorage. The dedicated `/demo/admin` screen never exposes real bookings. Real `/admin` retains middleware/session protections. Demo booking/contact actions never call live services.
+## Availability rules
 
-## Editable website (September 2026)
+Her hours for a date come from the week planner (`availability_days`) or else her usual week (`working_hours`). They are a **start window**: start times every 30 minutes from open through close, whatever the style's length. A booking blocks `[start, end + break)`, so no other appointment can overlap it; blocked time and busy calendar time also exclude starts. Booking rules live in `business_settings` (break, notice ≥ 24 h, window up to 366 days). Single source: `lib/availability.ts` (`hoursForDate`, `slotsForDay`), shared by the demo.
 
-Everything public is rendered from `SiteContent` (`lib/content.ts`): categories, services, add-ons, photos and text. Defaults come from `lib/menu.ts`, `lib/business.ts`, `lib/work-photos.ts`; live data from Supabase tables `categories`, `styles`, `addons`, `style_photos`, `site_content` (migration 006) and the `photos` storage bucket. `getContent()` in `lib/db.ts` is the single read; `/api/admin/content` (PATCH, admin only) applies `ContentOp`s via `applyContentOp`, the same pure function the demo uses with sessionStorage (`readDemoContent`). Public pages are client components (`LandingPage`, `Header`, `Footer`, `BookingFlow`) that layer demo edits via `useSiteContent`. The editor is `components/content-editor.tsx` (tabs Text · Menu · Add-ons · Photos) at `/admin/content` and in the demo dashboard's Website tab. Photos are resized in the browser (`lib/resize-image.ts`) before upload. The owner's guide is `docs/OWNER-GUIDE.md`.
+## Dashboard
 
-## Booking modes
-
-`bookingReady()` is true when Supabase/admin env is set, the site URL is https, and she has saved hours and switched on `business_settings.booking_open` from Availability. Then `/book` runs the full calendar flow and saves requests (emails only if Resend is configured; otherwise the receipt tells the client she'll contact them and `NotifySika` offers text/Instagram/email). Otherwise `RequestPanel` collects name + preferred day and uses the same `NotifySika`. Message text: `lib/booking-message.ts`. Her optional phone number is `SiteText.phone`.
-
-## Messages and reminders
-
-`lib/reminder-rules.ts` (pure: when a reminder is due, E.164 phone formatting, message text) and `lib/reminders.ts` (claims each reminder in `bookings.reminder_*_sent_at` before sending) run from `GET /api/jobs`, which Supabase `pg_cron` + `pg_net` calls every 10 minutes (`npm run cron:setup`, job name `styled-by-sika-jobs`). Booking confirmations/deposit/cancellation texts are sent from `lib/jobs.ts`, guarded by `booking_jobs.sms_sent_at`. Email via Resend, texts via Twilio REST (`lib/notify.ts`); texts are skipped when Twilio isn't configured. Migration 007 adds the columns.
-
-## Availability and the dashboard
-
-Available start times = her hours for that date: a planned day (`availability_days`, migration 009, set in the week planner) or else her usual week (`working_hours`), minus Google Calendar busy time, existing bookings (each blocks its full length plus the 30-minute buffer) and one-off `time_off` blocks. `lib/availability.ts#hoursForDate` + `slotsForDay` are the single rule set; `/api/availability?month=` returns a whole month in one request (`availableSlotsForRange`); the booking window defaults to 365 days; the demo uses it too with hours/blocks kept in sessionStorage, so a 3.5-hour demo booking at 9:00 removes every start before 1:00 PM. Sika edits hours and blocked times in `/admin/settings` (`components/availability-editor.tsx`, `/api/admin/availability`); the demo dashboard's Settings tab shows the same editor. Access is by login: only `ADMIN_EMAIL` passes `requireAdmin`/middleware.
-
-The booking page's service chooser (`components/service-picker.tsx`) is a category-then-option list in the site's own style, not a native `<select>`.
+`/admin`: Today, Bookings, Clients, **Website** (text, her photo, categories, services, add-ons, category photos), **Availability** (week planner, usual week, rules, blocked time, password). Unsaved text/hours show a sticky Save bar and a leave warning. One-time sign-in and reset links open `/auth/confirm`, where a **Continue** button POSTs the token, so link previews can't use it up. `npm run admin:create -- <email>` prints a new link.
 
 ## Owner preferences
 
-Plain, direct copy. Keep the existing dark editorial layout. Obvious navigation buttons and strong contrast. Amewusika and Vaughan must be large and prominent above the fold. Real photographs only; never AI-generated. Correct hairstyle matches, not generic photos labeled as a different service.
+Plain, direct copy in her own voice. Keep the dark editorial look (lavender accent, italic serif highlights, pill buttons, drawn purple stars). Real photos only, never AI-generated. Mobile first; smooth but calm motion, off for reduced motion. Nothing should require contacting a developer.
 
-No stock photos remain on the site; only the owner's own images are shown.
+## Open items
 
-## Outstanding live launch work
-
-Business hours and own photographs for boho, twists, invisible locs and soft locs. Prices, durations, hair requirements, deposit, payment options, cancellation policy and contact details are confirmed by the owner and live in `lib/menu.ts` and `lib/business.ts`. External account setup, database concurrency tests, email/calendar synchronization testing, retry scheduling, and dependency security review are not complete. Do not represent the demo as production-ready or enable live booking yet.
-
-Knotless photos (owner's IMG_0618.jpeg/IMG_0617.jpeg) are in public/images/styles/knotless and listed in lib/work-photos.ts; they appear beside the Knotless heading in the menu. Pexels reference photos, the gallery, FAQ, contact form and the goddess/stitch/cornrow starter services were removed at the owner's request. Adding photos: docs/ADDING-PHOTOS.md.
+- Supabase auth settings so "Forgot your password?" emails reach her: invite her to the organisation, set the Site URL and Redirect URLs, and paste the reset template (see GOING-LIVE).
+- She hasn't added her phone number or e-transfer details yet (Website → Text).
+- At handoff: reset the database password and roll the secret key, then update `.env.local` and Vercel.

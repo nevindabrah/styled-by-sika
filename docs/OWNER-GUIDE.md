@@ -2,6 +2,9 @@
 
 This is your guide to running the website yourself. Nothing here needs a developer.
 
+- **Your website:** https://styled-by-sika.vercel.app
+- **Your dashboard:** https://styled-by-sika.vercel.app/login (tip: add it to your phone's home screen)
+
 ## Signing in
 
 **The first time:** open the one-time sign-in link you were sent and tap **Continue to my dashboard**. You land on **Your sign-in**, where you choose your password.
@@ -19,10 +22,10 @@ You will land on **Today**: today's appointments, the next seven days, and who s
 | Tab | What it is for |
 | --- | --- |
 | **Today** | Your day at a glance. |
-| **Bookings** | Every appointment. Tap one to mark the deposit paid, mark it completed or no-show, cancel it (the client is emailed), or keep a private note. |
+| **Bookings** | Every appointment. Tap one to mark the deposit paid, mark it completed or no-show, cancel it, or keep a private note. |
 | **Clients** | Who has booked, how many visits, what they usually get. |
 | **Website** | Everything clients read and see: text, menu, prices, add-ons, photos. |
-| **Availability** | Which days and times clients can book. |
+| **Availability** | Plan your weeks (as far ahead as you like), your usual week, booking rules, blocked dates, and your password. |
 
 ## Changing prices, services and categories (Website → Menu)
 
@@ -54,11 +57,11 @@ Your name and location, the line under your name, how clients can pay, the welco
 - **Booking rules**: the break you need between clients, how much notice clients must give (at least 24 hours), and how far ahead they can book (up to a year). **Save booking rules**.
 - **Blocked dates & times**: a holiday, a day off, or a few hours. Tick **Whole day** or set a from/to time, then **Block this time**.
 
-Clients see start times every 30 minutes from your start time, and only times where the whole appointment fits before your end time. Example: free 12–8 and a 6-hour style → clients can start at 12:00, 12:30, 1:00, 1:30 or 2:00. Once someone books 12:00, the whole 12–6 (plus your break) disappears for everyone else. Cancelling a booking frees the time again.
+Your hours are the times you're happy to **start** an appointment, whatever the style. Set 10–12 and clients can start at 10:00, 10:30, 11:00, 11:30 or 12:00, even for a 12-hour style. Appointments never overlap: if you're open 12–8 and someone books a 6-hour style at 12:00, nobody else can start until it ends at 6:00 plus your break (6:30 with a 30-minute break), so 6:30, 7:00, 7:30 and 8:00 are still offered. Cancelling a booking frees the time again.
 
 ## How clients book
 
-Clients pick a service, then a day and a start time from **your** availability, like Calendly. Start times are every 30 minutes within your weekly hours, and any time that would overlap another appointment, your break between clients, or a blocked date is left out automatically. Before confirming they read: *“I will be happy to confirm your time and send deposit details; your appointment is confirmed once your deposit is received. By booking, you agree to the booking policies 🤎”*. After they confirm they see **Booking confirmed** with two steps: **① send their booking to Styled by Sika** (already written) and **② send the deposit**. The booking appears in **Bookings** as *Awaiting deposit*, and that time is no longer offered to anyone else.
+Clients pick a service, then a day and a start time from **your** availability, like Calendly: every 30 minutes from your From time to your To time. Any start that would overlap another appointment, your break between clients, or a blocked date is left out automatically. Before confirming they read: *“I will be happy to confirm your time and send deposit details; your appointment is confirmed once your deposit is received. By booking, you agree to the booking policies 🤎”*. After they confirm they see **Booking confirmed** with two steps: **① send their booking to Styled by Sika** (already written) and **② send the deposit**. The booking appears in **Bookings** as *Awaiting deposit*, and that time is no longer offered to anyone else.
 
 If you haven't set any weekly hours, no times are shown and clients are asked to message you. Set your hours under **Availability** to start taking bookings.
 
