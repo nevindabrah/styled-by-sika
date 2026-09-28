@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ChevronDown, Clock3 } from 'lucide-react';
+import { ChevronDown, Clock3, Maximize2 } from 'lucide-react';
+import { PhotoViewer } from './photo-viewer';
 import { extraGroups } from '@/lib/menu';
 import { durationRange, extraLine, money, priceLabel, splitName } from '@/lib/pricing';
 import type { Extra, Service } from '@/lib/types';
@@ -15,6 +16,16 @@ export type MenuGroup = { slug: string; label: string; services: Service[]; phot
 // so links, search engines and the floating Book bar can still find them.
 export function MenuAccordion({ groups, extras, showPrices }: { groups: MenuGroup[]; extras: Extra[]; showPrices: boolean }) {
   const [open, setOpen] = useState<string | null>(null);
+  const [viewer, setViewer] = useState<{ photos: Photo[]; index: number; label: string } | null>(null);
+  const anchor = useRef<{ id: string; top: number } | null>(null);
+  // Opening one row closes another, which would shift the page; keep the tapped row where the finger is.
+  useLayoutEffect(() => {
+    const a = anchor.current; anchor.current = null;
+    const el = a && document.getElementById(a.id);
+    if (!a || !el) return;
+    const delta = el.getBoundingClientRect().top - a.top;
+    if (Math.abs(delta) > 1) window.scrollBy({ top: delta, behavior: 'instant' as ScrollBehavior });
+  }, [open]);
   useEffect(() => {
     // /#menu-boho or /#large-boho-standard opens the matching category, on load and on later hash jumps.
     function openFromHash() {
@@ -28,11 +39,12 @@ export function MenuAccordion({ groups, extras, showPrices }: { groups: MenuGrou
     return () => removeEventListener('hashchange', openFromHash);
   }, [groups]);
   function toggle(slug: string) {
-    const next = open === slug ? null : slug;
-    setOpen(next);
-    if (next) requestAnimationFrame(() => { const el = document.getElementById(`menu-${slug}`); if (el && el.getBoundingClientRect().top < 0) el.scrollIntoView({ block: 'start' }); });
+    const el = document.getElementById(`menu-${slug}`);
+    anchor.current = el ? { id: el.id, top: el.getBoundingClientRect().top } : null;
+    setOpen(open === slug ? null : slug);
   }
   return <div className="menu-accordion">
+    {viewer && <PhotoViewer {...viewer} onClose={() => setViewer(null)} />}
     {groups.map(g => {
       const from = Math.min(...g.services.map(s => s.price_cents)), expanded = open === g.slug;
       return <section key={g.slug} id={`menu-${g.slug}`} className={`menu-row ${expanded ? 'is-open' : ''}`}>
@@ -44,7 +56,7 @@ export function MenuAccordion({ groups, extras, showPrices }: { groups: MenuGrou
           </button>
         </h3>
         <div id={`panel-${g.slug}`} className="menu-row-body" hidden={!expanded}>
-          {g.photos.length > 0 && <div className="work-photos">{g.photos.map(p => <Image key={p.id} src={p.url} alt={p.alt} width={p.width} height={p.height} sizes="(max-width:700px) 40vw, 150px" unoptimized />)}{g.photos.every(p => p.own) && <small>Braided by Sika</small>}</div>}
+          {g.photos.length > 0 && <div className="work-photos">{g.photos.map((p, i) => <button key={p.id} type="button" className="work-photo" aria-label={`Enlarge photo ${i + 1} of ${g.photos.length}: ${p.alt}`} onClick={() => setViewer({ photos: g.photos, index: i, label: g.label })}><Image src={p.url} alt="" width={p.width} height={p.height} sizes="(max-width:700px) 40vw, 150px" unoptimized /><span className="work-photo-zoom" aria-hidden="true"><Maximize2 size={14} /></span></button>)}<small>{g.photos.every(p => p.own) ? 'Braided by Sika · ' : ''}Tap a photo to enlarge</small></div>}
           <div className="menu-list">{g.services.map(s => <ServiceItem key={s.id} service={s} showPrices={showPrices} />)}</div>
         </div>
       </section>;

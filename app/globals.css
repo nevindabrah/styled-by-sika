@@ -725,3 +725,43 @@ body { font-size: 16px; line-height: 1.6; }
 .booking-switch p { margin: 4px 0 0; font-size: 15px; }
 .ticker > span { display: inline-flex; align-items: center; gap: 32px; }
 @media (max-width: 760px) { .ticker > span { gap: 22px; } }
+
+/* Phones: nothing may stick out sideways (iPhones let the whole page drift). */
+html { overflow-x: hidden; overflow-x: clip; }
+.ticker { width: 100%; margin-left: 0; }
+
+/* Section nav: three equal buttons that always fit; short labels on phones. */
+.section-nav .label-short { display: none; }
+@media (max-width: 1000px) {
+  .section-nav { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; overflow: visible; }
+  .section-nav .nav-link { justify-content: center; min-width: 0; padding-inline: 8px; }
+}
+@media (max-width: 600px) {
+  .section-nav .label-long { display: none; }
+  .section-nav .label-short { display: inline; }
+}
+
+/* Dashboard navs: tidy rows of equal buttons on phones. */
+@media (max-width: 760px) {
+  .admin-header { gap: 14px; }
+  .admin-nav { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; width: 100%; }
+  .admin-nav > a, .admin-nav > button, .admin-nav .chip, .admin-nav .text-link { display: flex; align-items: center; justify-content: center; min-height: 42px; padding: 8px 6px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--paper); font-size: 13px; font-weight: 600; text-align: center; white-space: nowrap; }
+  .admin-nav .chip.selected, .admin-nav a[aria-current] { background: var(--accent); border-color: var(--accent); color: #171321; }
+  .editor-tabs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+  .editor-tabs .chip { justify-content: center; padding-inline: 4px; }
+}
+
+/* Tap-to-enlarge photos. */
+.work-photo { position: relative; padding: 0; border: 0; background: none; border-radius: 12px; cursor: zoom-in; line-height: 0; }
+.work-photo img { display: block; }
+.work-photo-zoom { position: absolute; right: 6px; bottom: 6px; display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: #171321d9; color: #fff; }
+.work-photo:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.photo-viewer { position: fixed; inset: 0; width: 100vw; height: 100dvh; max-width: none; max-height: none; margin: 0; padding: 60px 12px 90px; border: 0; background: #08060ff2; color: #f6f1e9; }
+.photo-viewer::backdrop { background: #000c; }
+.photo-viewer[open] { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.photo-viewer-figure { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 12px; max-width: 100%; touch-action: pan-y pinch-zoom; }
+.photo-viewer-figure img { width: auto; height: auto; max-width: min(100%, 900px); max-height: calc(100dvh - 190px); object-fit: contain; border-radius: 12px; user-select: none; }
+.photo-viewer-figure figcaption { font-size: 14px; color: #d6cfe0; }
+.photo-viewer .photo-viewer-close { position: absolute; top: 14px; right: 14px; background: #211b2d; color: #fff; border-color: #ffffff55; }
+.photo-viewer-controls { position: absolute; bottom: calc(22px + env(safe-area-inset-bottom)); left: 0; right: 0; display: flex; justify-content: center; gap: 16px; }
+.photo-viewer-controls .icon-button { width: 52px; height: 52px; background: #211b2d; color: #fff; border-color: #ffffff55; }

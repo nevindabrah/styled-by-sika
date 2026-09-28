@@ -7,9 +7,9 @@ import { useSiteContent } from '@/lib/use-site-content';
 
 // Everything is on the landing page, so navigation is a short list of section links.
 export const sectionLinks = [
-  ['/#services', 'Services & prices'],
-  ['/#before-you-book', 'Before you book'],
-  ['/#contact', 'Contact'],
+  ['/#services', 'Services & prices', 'Services'],
+  ['/#before-you-book', 'Before you book', 'Policies'],
+  ['/#contact', 'Contact', 'Contact'],
 ] as const;
 
 export function Header({ content: initial }: { content: SiteContent }) {
@@ -25,11 +25,11 @@ export function Header({ content: initial }: { content: SiteContent }) {
           styled<span>by Sika</span>
         </Link>
         <nav className="section-nav" aria-label="Main navigation">
-          {sectionLinks.map(([href, label]) => <Link key={href} href={href} className="nav-link">{label}</Link>)}
+          {sectionLinks.map(([href, label, short]) => <Link key={href} href={href} className="nav-link" aria-label={label}><span className="label-long">{label}</span><span className="label-short" aria-hidden="true">{short}</span></Link>)}
         </nav>
         <a className="icon-button header-ig" href={ig.dm} target="_blank" rel="noreferrer" aria-label={`Message ${text.instagramHandle} on Instagram`} title={`Message ${text.instagramHandle} on Instagram`}><Instagram size={19} aria-hidden="true" /></a>
         <ThemeToggle />
-        <Link className="button button-small nav-book" href="/book" data-book-cta>
+        <Link className="button button-small nav-book" href="/book" data-book-cta="main">
           Book now <ArrowUpRight size={16} />
         </Link>
       </header>

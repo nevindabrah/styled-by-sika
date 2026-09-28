@@ -4,7 +4,8 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { ArrowUpRight } from 'lucide-react';
 
-// Phone and tablet only: keeps booking one tap away whenever no other Book button is on screen.
+// Phone and tablet only: appears once the top Book buttons scroll away and stays put (it doesn't react to
+// the per-service Book buttons, so it never flickers while browsing the menu).
 export function MobileBookBar({ note }: { note: string }) {
   const [show, setShow] = useState(false);
   useEffect(() => {
@@ -13,7 +14,7 @@ export function MobileBookBar({ note }: { note: string }) {
       entries.forEach(e => e.isIntersecting ? visible.add(e.target) : visible.delete(e.target));
       setShow(visible.size === 0);
     });
-    document.querySelectorAll('[data-book-cta]').forEach(el => observer.observe(el));
+    document.querySelectorAll('[data-book-cta="main"]').forEach(el => observer.observe(el));
     return () => observer.disconnect();
   }, []);
   return <div className={`mobile-book-bar ${show ? 'is-visible' : ''}`} aria-hidden={!show}>

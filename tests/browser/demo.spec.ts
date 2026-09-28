@@ -19,7 +19,7 @@ for (const width of [390, 768, 1440]) {
         await expect.poll(() => image.evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth > 0), { message: `Image on ${route}` }).toBeTruthy();
       }
       expect(errors, route).toEqual([]);
-      expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth), `horizontal overflow on ${route}`).toBeLessThanOrEqual(8);
+      expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth), `sideways scroll on ${route}`).toBe(0);
     }
   });
 }
@@ -29,7 +29,7 @@ test('landing page shows the complete menu, policies and contact details', async
   // Categories start closed; open each one and check its options.
   await expect(page.locator('.service:visible')).toHaveCount(0);
   for (const row of await page.locator('.menu-row').all()) {
-    const head = row.getByRole('button');
+    const head = row.locator('.menu-row-head');
     await head.click();
     await expect(head).toHaveAttribute('aria-expanded', 'true');
     await expect(row.locator('.service, .extras').first()).toBeVisible();
@@ -73,12 +73,14 @@ test('section navigation and collapsible categories work on phone and desktop', 
     await page.setViewportSize({ width, height: 900 });
     await page.goto('/');
     const nav = page.getByRole('navigation', { name: 'Main navigation' });
+    // The three section buttons fit the screen without sideways scrolling.
+    expect(await nav.evaluate(el => el.scrollWidth - el.clientWidth)).toBeLessThanOrEqual(0);
     for (const [label, id] of [['Services & prices', 'services'], ['Before you book', 'before-you-book'], ['Contact', 'contact']]) {
       await nav.getByRole('link', { name: label, exact: true }).click();
       await expect(page).toHaveURL(new RegExp(`#${id}$`));
       await expect.poll(() => page.locator(`#${id}`).evaluate(el => el.getBoundingClientRect().top < innerHeight)).toBeTruthy();
     }
-    const knotless = page.locator('#menu-knotless').getByRole('button'), boho = page.locator('#menu-boho').getByRole('button');
+    const knotless = page.locator('#menu-knotless .menu-row-head'), boho = page.locator('#menu-boho .menu-row-head');
     await knotless.scrollIntoViewIfNeeded();
     await expect(page.locator('#menu-knotless .service').first()).toBeHidden();
     await knotless.click();
@@ -87,7 +89,7 @@ test('section navigation and collapsible categories work on phone and desktop', 
     await expect(page.locator('#menu-knotless .work-photos img')).toHaveCount(3);
     await expect(page.locator('#menu-boho .work-photos img')).toHaveCount(1);
     for (const [slug, count] of [['miracle-knots', 2], ['twists', 1], ['invisible-locs', 1], ['soft-locs', 1]] as const) {
-      await page.locator(`#menu-${slug}`).getByRole('button').click();
+      await page.locator(`#menu-${slug} .menu-row-head`).click();
       await expect(page.locator(`#menu-${slug} .work-photos img`)).toHaveCount(count);
     }
     await boho.click();
@@ -99,7 +101,7 @@ test('section navigation and collapsible categories work on phone and desktop', 
   }
   // A shared link to a category or service opens it.
   await page.goto('/#menu-soft-locs');
-  await expect(page.locator('#menu-soft-locs').getByRole('button')).toHaveAttribute('aria-expanded', 'true');
+  await expect(page.locator('#menu-soft-locs .menu-row-head')).toHaveAttribute('aria-expanded', 'true');
   await page.goto('/#small-invisible-locs');
   await expect(page.locator('#small-invisible-locs')).toBeInViewport();
 });
@@ -112,10 +114,11 @@ test('phone book bar appears only when no other Book button is on screen', async
   await page.locator('#before-you-book').scrollIntoViewIfNeeded();
   await expect(bar).toHaveClass(/is-visible/);
   await expect(bar.getByRole('link', { name: 'Book now' })).toBeInViewport();
-  // Opening a category brings its Book buttons on screen and hides the bar again.
-  await page.locator('#menu-twists').getByRole('button').click();
+  // Browsing the menu doesn't make it flicker in and out.
+  await page.locator('#menu-twists').scrollIntoViewIfNeeded();
+  await page.locator('#menu-twists .menu-row-head').click();
   await expect(page.locator('#menu-twists .service-book').first()).toBeInViewport();
-  await expect(bar).not.toHaveClass(/is-visible/);
+  await expect(bar).toHaveClass(/is-visible/);
   await page.setViewportSize({ width: 1440, height: 900 });
   await expect(bar).toBeHidden();
 });
@@ -123,7 +126,7 @@ test('phone book bar appears only when no other Book button is on screen', async
 test('a service Book button opens booking with that service and the demo booking reaches the dashboard', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/');
-  await page.locator('#menu-knotless').getByRole('button').click();
+  await page.locator('#menu-knotless .menu-row-head').click();
   await page.getByRole('link', { name: 'Book Large Knotless Braids — Shoulder Length' }).click();
   await expect(page).toHaveURL(/\/book\?service=large-knotless-shoulder$/);
   await expect(page.locator('.picked-service')).toContainText('Large Knotless Braids');
@@ -328,9 +331,9 @@ test('the braider can change words, prices, services and photos from her dashboa
   await page.goto('/');
   await expect(page.locator('.hero-services')).toHaveText('Knotless, boho, locs and more.');
   await expect(page.locator('.hero-facts')).toContainText('CA$25 deposit');
-  await page.locator('#menu-knotless').getByRole('button').click();
+  await page.locator('#menu-knotless .menu-row-head').click();
   await expect(page.locator('#large-knotless-standard')).toContainText('CA$130');
-  await page.locator('#menu-twists').getByRole('button').click();
+  await page.locator('#menu-twists .menu-row-head').click();
   await expect(page.locator('#menu-twists')).toContainText('Passion Twists');
   await expect(page.locator('#menu-twists')).toContainText('3 packs of passion twist hair.');
   await expect(page.locator('#menu-twists .work-photos img')).toHaveCount(2);
@@ -340,4 +343,38 @@ test('the braider can change words, prices, services and photos from her dashboa
   await page.goto('/book?service=passion-twists-mid-back-length');
   await expect(page.locator('.picked-service')).toContainText('Passion Twists');
   await expect(page.locator('.quote-total strong')).toHaveText('CA$140');
+});
+
+test('phone: no sideways drift, the menu stays still when switching rows, and photos enlarge', async ({ page }) => {
+  for (const width of [320, 375, 390]) {
+    await page.setViewportSize({ width, height: 800 });
+    await page.goto('/');
+    expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth), `${width}px`).toBe(0);
+    expect(await page.getByRole('navigation', { name: 'Main navigation' }).evaluate(el => el.scrollWidth - el.clientWidth), `${width}px nav`).toBeLessThanOrEqual(0);
+  }
+  await page.goto('/');
+  const knotless = page.locator('#menu-knotless .menu-row-head'), boho = page.locator('#menu-boho .menu-row-head');
+  await knotless.click();
+  await page.locator('#menu-knotless .service').nth(5).scrollIntoViewIfNeeded();
+  await boho.scrollIntoViewIfNeeded(); // so the tap itself doesn't scroll
+  const before = await boho.evaluate(el => el.getBoundingClientRect().top);
+  await boho.click();
+  await expect(boho).toHaveAttribute('aria-expanded', 'true');
+  const after = await boho.evaluate(el => el.getBoundingClientRect().top);
+  expect(Math.abs(after - before), 'row stays under the finger').toBeLessThan(3);
+  await expect(page.locator('#menu-boho .work-photos small')).toContainText('Tap a photo to enlarge');
+  await knotless.click();
+  await page.getByRole('button', { name: /^Enlarge photo 1 of 3/ }).click();
+  const viewer = page.getByRole('dialog', { name: 'Knotless braids photos' });
+  await expect(viewer).toBeVisible();
+  await expect(viewer).toContainText('1 of 3');
+  await viewer.getByRole('button', { name: 'Next photo' }).click();
+  await expect(viewer).toContainText('2 of 3');
+  await page.keyboard.press('ArrowLeft');
+  await expect(viewer).toContainText('1 of 3');
+  await page.keyboard.press('Escape');
+  await expect(viewer).toBeHidden();
+  await page.getByRole('button', { name: /^Enlarge photo 2 of 3/ }).click();
+  await page.getByRole('button', { name: 'Close photo' }).click();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
 });
