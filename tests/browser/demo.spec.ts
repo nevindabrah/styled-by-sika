@@ -86,7 +86,7 @@ test('section navigation and collapsible categories work on phone and desktop', 
     await expect(page.locator('#menu-knotless .service').first()).toBeVisible();
     await expect(page.locator('#menu-knotless .work-photos img')).toHaveCount(3);
     await expect(page.locator('#menu-boho .work-photos img')).toHaveCount(1);
-    for (const [slug, count] of [['miracle-knots', 2], ['invisible-locs', 1], ['soft-locs', 1]] as const) {
+    for (const [slug, count] of [['miracle-knots', 2], ['twists', 1], ['invisible-locs', 1], ['soft-locs', 1]] as const) {
       await page.locator(`#menu-${slug}`).getByRole('button').click();
       await expect(page.locator(`#menu-${slug} .work-photos img`)).toHaveCount(count);
     }
@@ -320,7 +320,7 @@ test('the braider can change words, prices, services and photos from her dashboa
   await twists.getByLabel('Describe the photo (for screen readers and search)').fill('Passion twists from the back');
   await twists.getByLabel('Add a photo to Twists').setInputFiles('public/images/styles/boho/boho-01.jpg');
   await expect(page.getByRole('status')).toContainText('Photo added');
-  await expect(twists.locator('.photo-item')).toHaveCount(1);
+  await expect(twists.locator('.photo-item')).toHaveCount(2); // the built-in twists photo plus the upload
   // The public site reflects every change in this tab.
   await page.goto('/');
   await expect(page.locator('.hero-services')).toHaveText('Knotless, boho, locs and more.');
@@ -330,7 +330,7 @@ test('the braider can change words, prices, services and photos from her dashboa
   await page.locator('#menu-twists').getByRole('button').click();
   await expect(page.locator('#menu-twists')).toContainText('Passion Twists');
   await expect(page.locator('#menu-twists')).toContainText('3 packs of passion twist hair.');
-  await expect(page.locator('#menu-twists .work-photos img')).toHaveCount(1);
+  await expect(page.locator('#menu-twists .work-photos img')).toHaveCount(2);
   await expect(page.locator('#menu-soft-locs')).toHaveCount(0);
   await expect(page.locator('#menu-cornrows')).toHaveCount(0); // empty categories stay off the menu
   // Booking picks up the new service and the new deposit note.

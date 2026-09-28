@@ -16,6 +16,9 @@ export const workPhotos: Record<string, WorkPhoto[]> = {
     { url: '/images/styles/miracle-knots/miracle-knots-01.jpg', width: 387, height: 516, alt: 'Miracle knots with long defined curls, shown from the side' },
     { url: '/images/styles/miracle-knots/miracle-knots-02.jpg', width: 768, height: 1024, alt: 'Miracle knots with full, shiny curls framing the face' },
   ],
+  twists: [
+    { url: '/images/styles/twists/twists-01.jpg', width: 480, height: 640, alt: 'Long Marley twists with loose curly ends and highlights, shown from the back' },
+  ],
   'invisible-locs': [
     { url: '/images/styles/invisible-locs/invisible-locs-01.jpg', width: 1199, height: 1600, alt: 'Invisible locs from the back, showing the neat parts and full length' },
   ],
