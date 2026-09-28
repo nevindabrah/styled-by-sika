@@ -14,7 +14,14 @@ Two services are required: **Supabase** (database, sign-in, photo storage, remin
    npm run db:seed                             # menu, text, photos, photo bucket; never overwrites her edits
    npm run admin:create -- sika@email.com "a strong password"
    ```
-6. **Authentication → URL Configuration**: set *Site URL* to the public address (step 3 below) and add `https://<your-domain>/auth/callback` to *Redirect URLs*, so "Email me a sign-in link" works.
+6. **Authentication → URL Configuration**: set *Site URL* to the public address (step 3 below) and add `https://<your-domain>/**` to *Redirect URLs*.
+7. **Authentication → Emails → Reset Password**: replace the link in the template so it works on any device (the default link only works in the browser that asked for it):
+   ```html
+   <h2>Reset your Styled by Sika password</h2>
+   <p><a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=recovery">Sign in and choose a new password</a></p>
+   <p>This link works once and expires in an hour. If you didn't ask for it, ignore this email.</p>
+   ```
+8. **Organization → Team → Invite** the braider's email. Supabase's built-in email only delivers to organisation members, so this is what lets "Forgot your password?" reach her (until custom SMTP, e.g. Resend, is configured under Authentication → Emails → SMTP).
 
 After this, `npm run dev` runs against the real database. Sign in at `/login`; everything in Website and Availability is now saved to Supabase.
 

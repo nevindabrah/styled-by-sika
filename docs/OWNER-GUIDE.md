@@ -6,7 +6,9 @@ This is your guide to running the website yourself. Nothing here needs a develop
 
 **The first time:** open the one-time sign-in link you were sent. It logs you straight in. Then go to **Availability**, scroll to **Your sign-in**, and choose your password.
 
-**After that:** open your website, scroll to the bottom and tap **Braider sign in** (or go to `/admin`). Sign in with **styledbysika@gmail.com** and your password, or tap **Email me a sign-in link** if you forget it. You can change your password any time under **Your sign-in**.
+**After that:** open your website, scroll to the bottom and tap **Braider sign in** (or go to `/admin`). Sign in with **styledbysika@gmail.com** and your password. You can change your password any time under **Your sign-in**.
+
+**Forgot your password?** On the sign-in page tap **Forgot your password?**, enter your email and tap **Email me a link**. Open the email on any device (check spam if it isn't there within a few minutes): the link signs you in and opens **Your sign-in**, where you choose a new password. Each link works once and expires after an hour.
 
 Only your email address can get in. Clients never see this area.
 
@@ -65,4 +67,4 @@ Clients pay you directly by cash or e-transfer. Once online booking is on, open 
 
 - Changes not showing? Refresh the page. Everything you save is live straight away.
 - Made a mistake? Edit it again — nothing is permanent except deleting a photo.
-- Locked out? Use **Email me a sign-in link** on the sign-in page.
+- Locked out? Use **Forgot your password?** on the sign-in page.
