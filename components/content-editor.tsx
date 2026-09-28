@@ -3,7 +3,7 @@
 import { useRef, useState, type ReactNode } from 'react';
 import Image from 'next/image';
 import { ArrowDown, ArrowUp, Plus, Trash2, Upload } from 'lucide-react';
-import type { Category, ContentOp, Photo, Policy, SiteContent, SiteText } from '@/lib/content';
+import { portraitCategory, portraitOf, type Category, type ContentOp, type Photo, type Policy, type SiteContent, type SiteText } from '@/lib/content';
 import type { Extra, Service } from '@/lib/types';
 import { extraGroups } from '@/lib/menu';
 import { durationRange, money, priceLabel, extraLine, splitName } from '@/lib/pricing';
@@ -45,6 +45,11 @@ function TextTab({ text: saved, apply }: { text: SiteText; apply: Apply }) {
   const movePolicy = (i: number, d: number) => { const list = [...t.policies]; const [p] = list.splice(i, 1); list.splice(i + d, 0, p); set({ policies: list }); };
   async function save() { setBusy(true); try { await apply({ type: 'text', text: t }); } catch { /* message shown by the editor */ } finally { setBusy(false); } }
   return <div className="editor-panel">
+    <h3>About you</h3>
+    <div className="editor-two">
+      <Field label="Your name" hint="First name shows as “Braids by …”"><input value={t.name} maxLength={60} onChange={e => set({ name: e.target.value })} /></Field>
+      <Field label="Location"><input value={t.location} maxLength={80} onChange={e => set({ location: e.target.value })} /></Field>
+    </div>
     <h3>Top of the page</h3>
     <Field label="Services line under your name"><input value={t.heroServices} maxLength={200} onChange={e => set({ heroServices: e.target.value })} /></Field>
     <Field label="Welcome title"><input value={t.welcomeTitle} maxLength={120} onChange={e => set({ welcomeTitle: e.target.value })} /></Field>
@@ -62,11 +67,17 @@ function TextTab({ text: saved, apply }: { text: SiteText; apply: Apply }) {
       <Field label="Last line (optional)"><textarea value={p.outro} maxLength={600} rows={2} onChange={e => setPolicy(i, { outro: e.target.value })} /></Field>
     </div>)}
     <button type="button" className="button button-outline" onClick={() => set({ policies: [...t.policies, { id: `policy-${Date.now()}`, title: '', intro: '', items: [], outro: '' }] })}><Plus size={16} /> Add a policy</button>
-    <h3>Deposit</h3>
+    <h3>Deposit & payment</h3>
+    <Field label="How clients can pay" hint="Shown at the top of the page, e.g. Cash or e-transfer"><input value={t.paymentMethods} maxLength={80} onChange={e => set({ paymentMethods: e.target.value })} /></Field>
     <Field label="Deposit amount (CA$)"><input type="number" min={0} step={1} value={dollars(t.depositCents)} onChange={e => set({ depositCents: cents(e.target.value) })} /></Field>
     <Field label="E-transfer to (optional)" hint="The email or phone number clients send their deposit to. Shown in step 2 after they book."><input value={t.etransferTo ?? ''} maxLength={120} placeholder="e.g. your e-transfer email" onChange={e => set({ etransferTo: e.target.value })} /></Field>
     <Field label="Deposit and payment note" hint="Shown on the booking page and in confirmation emails"><textarea value={t.depositSummary} maxLength={600} rows={3} onChange={e => set({ depositSummary: e.target.value })} /></Field>
     <h3>Contact</h3>
+    <div className="editor-two">
+      <Field label="Contact heading"><input value={t.contactTitle} maxLength={60} onChange={e => set({ contactTitle: e.target.value })} /></Field>
+      <Field label="Heading, second line"><input value={t.contactTitleAccent} maxLength={60} onChange={e => set({ contactTitleAccent: e.target.value })} /></Field>
+    </div>
+    <Field label="Contact message"><textarea rows={2} value={t.contactIntro} maxLength={400} onChange={e => set({ contactIntro: e.target.value })} /></Field>
     <Field label="Instagram username"><input value={t.instagramHandle} maxLength={31} onChange={e => set({ instagramHandle: e.target.value })} /></Field>
     <Field label="Email address"><input type="email" value={t.email} maxLength={200} onChange={e => set({ email: e.target.value })} /></Field>
     <Field label="Phone number for texts (optional)" hint="Clients can text you their booking in one tap. Leave empty to keep your number off the site."><input type="tel" value={t.phone ?? ''} maxLength={20} placeholder="416-555-0101" onChange={e => set({ phone: e.target.value })} /></Field>
@@ -233,6 +244,7 @@ function ExtraForm({ extra, apply, onDone, isNew = false }: { extra: Extra; appl
 /* ---------- Photos ---------- */
 function PhotosTab({ content, apply }: { content: SiteContent; apply: Apply }) {
   return <div className="editor-panel">
+    <PortraitEditor content={content} apply={apply} />
     <p className="muted">Photos sit next to their category on the menu. Upload straight from your phone; they are resized automatically. Tick “my own work” to show the “Braided by Sika” caption.</p>
     {[...content.categories].sort((a, b) => a.sort_order - b.sort_order).map(c => <CategoryPhotos key={c.slug} category={c} photos={content.photos.filter(p => p.category === c.slug).sort((a, b) => a.sort_order - b.sort_order)} apply={apply} />)}
   </div>;
@@ -267,6 +279,35 @@ function CategoryPhotos({ category, photos, apply }: { category: Category; photo
       <input ref={input} type="file" accept="image/jpeg,image/png,image/webp" hidden aria-label={`Add a photo to ${category.label}`} onChange={e => { const f = e.target.files?.[0]; if (f) upload(f); }} />
       <button type="button" className="button button-outline" disabled={busy} onClick={() => input.current?.click()}><Upload size={16} /> {busy ? 'Adding photo…' : `Add a photo to ${category.label}`}</button>
       {error && <p className="field-error">{error}</p>}
+    </div>
+  </section>;
+}
+
+// Her own photo in the welcome card: upload a new one to replace it.
+function PortraitEditor({ content, apply }: { content: SiteContent; apply: Apply }) {
+  const input = useRef<HTMLInputElement>(null);
+  const [busy, setBusy] = useState(false), [error, setError] = useState('');
+  const current = portraitOf(content);
+  async function replace(file: File) {
+    setBusy(true); setError('');
+    try {
+      const { dataUrl, width, height } = await resizeImage(file, 1200);
+      const old = content.photos.filter(p => p.category === portraitCategory);
+      await apply({ type: 'uploadPhoto', upload: { category: portraitCategory, alt: content.text.name, own: true, dataUrl, width, height } });
+      for (const p of old) await apply({ type: 'deletePhoto', id: p.id });
+    } catch (e) { setError((e as Error).message || 'That photo could not be added.'); }
+    finally { setBusy(false); if (input.current) input.current.value = ''; }
+  }
+  return <section className="editor-group is-open" aria-label="Your photo">
+    <h3>Your photo <span className="muted">· welcome card</span></h3>
+    <div className="portrait-editor">
+      <Image src={current.url} alt={current.alt} width={current.width} height={current.height} unoptimized sizes="120px" />
+      <div>
+        <p className="muted">A clear photo of you, ideally taller than it is wide.</p>
+        <input ref={input} type="file" accept="image/jpeg,image/png,image/webp" hidden aria-label="Replace your photo" onChange={e => { const f = e.target.files?.[0]; if (f) replace(f); }} />
+        <button type="button" className="button button-outline" disabled={busy} onClick={() => input.current?.click()}><Upload size={16} /> {busy ? 'Uploading…' : 'Replace your photo'}</button>
+        {error && <p className="field-error">{error}</p>}
+      </div>
     </div>
   </section>;
 }

@@ -787,3 +787,7 @@ html { overflow-x: hidden; overflow-x: clip; }
 .page-section:has(.receipt) .book-heading { display: none; }
 .receipt { padding-top: 8px; }
 .deposit-step a { color: var(--accent); text-decoration: underline; }
+.braider-portrait-image { object-fit: cover; object-position: center top; }
+.portrait-editor { display: flex; gap: 14px; align-items: center; padding-bottom: 14px; }
+.portrait-editor img { width: 96px; height: 124px; object-fit: cover; border-radius: 48px 48px 12px 12px; flex-shrink: 0; }
+.portrait-editor p { margin: 0 0 10px; font-size: 14px; }

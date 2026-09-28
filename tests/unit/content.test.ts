@@ -7,6 +7,9 @@ describe('website content editing', () => {
   expect(c.categories.map(x => x.slug)).toEqual(['knotless', 'boho', 'miracle-knots', 'twists', 'invisible-locs', 'soft-locs']);
   expect(c.services).toHaveLength(27);
   expect(c.text.instagramHandle).toBe('@styledby.sika');
+  expect(c.text.location).toBe('Vaughan, Ontario');
+  expect(c.text.paymentMethods).toBe('Cash or e-transfer');
+  expect(c.text.contactTitleAccent).toBe('Message me.');
   expect(c.photos.filter(p => p.category === 'knotless')).toHaveLength(3);
  });
  it('adds a service with a readable, unique slug and keeps it in its category', () => {

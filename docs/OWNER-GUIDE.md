@@ -39,11 +39,13 @@ Blow-dry, take-down, extra length and so on. Prices can be a single amount, a ra
 
 ## Photos (Website → Photos)
 
+**Your photo** (the welcome card) is at the top: tap **Replace your photo** and pick one from your phone.
+
 Under each category, tap **Add a photo to …** and choose a picture from your phone. It is resized automatically. Write a short description first (it helps people using screen readers and Google). Tick **This is my own work** so the photo gets the "Braided by Sika" caption. Use the arrows to reorder and the bin to remove.
 
 ## Words (Website → Text)
 
-The line under your name, the welcome message, every policy (deposit, payment, cancellation, hair prep, hair requirements), your deposit amount, your Instagram username and email, and the thank-you at the bottom. Edit and tap **Save text**. Add or remove policies with the buttons.
+Your name and location, the line under your name, how clients can pay, the welcome message, every policy (deposit, payment, cancellation, hair prep, hair requirements), your deposit amount, your Instagram username, email, phone and e-transfer details, the contact heading and message, and the thank-you at the bottom. Edit and tap **Save text**. Add or remove policies with the buttons.
 
 ## When clients can book (Availability)
 

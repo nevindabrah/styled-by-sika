@@ -3,6 +3,7 @@ import type { Extra, Service } from './types';
 import { categories as seedCategories } from './menu';
 import { seedCatalog } from './seed';
 import { workPhotos } from './work-photos';
+import { braiderProfile } from './braider-profile';
 import { beforeYouBook, contact, depositCents, depositSummary, policies as seedPolicies, thankYou, welcome } from './business';
 
 // Everything Sika can change from her dashboard. lib/menu.ts, lib/business.ts and lib/work-photos.ts are the defaults.
@@ -10,12 +11,15 @@ export type Category = { slug: string; label: string; short: string; sort_order:
 export type Photo = { id: string; category: string; url: string; alt: string; width: number; height: number; own: boolean; sort_order: number; storage_path: string | null };
 export type Policy = { id: string; title: string; intro: string; items: string[]; outro: string };
 export type SiteText = {
+  name: string; location: string; paymentMethods: string; contactTitle: string; contactTitleAccent: string; contactIntro: string;
   heroServices: string; welcomeTitle: string; welcomeBody: string; beforeYouBook: string; policies: Policy[];
   thankYouTitle: string; thankYouBody: string; instagramHandle: string; email: string; phone: string; etransferTo: string; depositSummary: string; depositCents: number;
 };
 export type SiteContent = { categories: Category[]; services: Service[]; extras: Extra[]; photos: Photo[]; text: SiteText; placeholder: boolean };
 
 export const defaultText = (): SiteText => ({
+  name: braiderProfile.name, location: 'Vaughan, Ontario', paymentMethods: 'Cash or e-transfer',
+  contactTitle: 'Questions?', contactTitleAccent: 'Message me.', contactIntro: 'For questions, booking assistance, or the fastest response, please feel free to contact me through:',
   heroServices: 'Knotless, boho knotless, miracle knots, twists, invisible locs and soft locs.',
   welcomeTitle: welcome.title, welcomeBody: welcome.body, beforeYouBook,
   policies: seedPolicies.map(p => ({ id: p.id, title: p.title, intro: p.intro ?? '', items: p.items ?? [], outro: p.outro ?? '' })),
@@ -40,6 +44,8 @@ export const isUuid = (v: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a
 const money = z.number().int().min(0).max(1_000_000);
 const policySchema = z.object({ id: z.string().min(1).max(40), title: z.string().trim().min(1).max(80), intro: z.string().trim().max(600), items: z.array(z.string().trim().min(1).max(300)).max(12), outro: z.string().trim().max(600) });
 export const textSchema = z.object({
+  name: z.string().trim().min(2).max(60), location: z.string().trim().min(2).max(80), paymentMethods: z.string().trim().max(80),
+  contactTitle: z.string().trim().max(60), contactTitleAccent: z.string().trim().max(60), contactIntro: z.string().trim().max(400),
   heroServices: z.string().trim().min(1).max(200), welcomeTitle: z.string().trim().min(1).max(120), welcomeBody: z.string().trim().min(1).max(1200), beforeYouBook: z.string().trim().max(800),
   policies: z.array(policySchema).max(12), thankYouTitle: z.string().trim().max(120), thankYouBody: z.string().trim().max(600),
   instagramHandle: z.string().trim().regex(/^@?[\w.]{1,30}$/, 'Use your Instagram username, like @styledby.sika.').transform(h => h.startsWith('@') ? h : `@${h}`), email: z.email().max(200), phone: z.string().trim().regex(/^(\+?[\d\s().-]{10,20})?$/, 'Use a phone number like 416-555-0101, or leave it empty.'), etransferTo: z.string().trim().max(120), depositSummary: z.string().trim().max(600), depositCents: money,
@@ -119,3 +125,11 @@ export function publicContent(c: SiteContent): SiteContent {
   const categories = byOrder(c.categories.filter(x => x.active));
   return { ...c, categories, services: byOrder(c.services.filter(s => s.active && categories.some(x => x.slug === s.category))), extras: byOrder(c.extras.filter(e => e.active)), photos: byOrder(c.photos) };
 }
+
+// Her own photo for the welcome card: the newest upload in the 'portrait' group, or the built-in one.
+export const portraitCategory = 'portrait';
+export function portraitOf(c: SiteContent): { url: string; alt: string; width: number; height: number; stored: Photo | null } {
+  const stored = [...c.photos].filter(p => p.category === portraitCategory).sort((a, b) => b.sort_order - a.sort_order)[0] ?? null;
+  return stored ? { url: stored.url, alt: stored.alt || c.text.name, width: stored.width, height: stored.height, stored } : { url: braiderProfile.photo, alt: c.text.name, width: 1105, height: 1424, stored: null };
+}
+export const firstName = (name: string) => name.trim().split(/\s+/)[0] || name;

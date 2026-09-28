@@ -17,7 +17,7 @@ export function Header({ content: initial }: { content: SiteContent }) {
   return (
     <>
       <div className="announcement">
-        <span className="announcement-place">STYLED BY SIKA · VAUGHAN, ONTARIO</span>
+        <span className="announcement-place">STYLED BY SIKA · {text.location.toUpperCase()}</span>
         <a className="announcement-ig" href={ig.dm} target="_blank" rel="noreferrer"><Instagram size={13} aria-hidden="true" /> DM {text.instagramHandle}</a>
       </div>
       <header className="header">

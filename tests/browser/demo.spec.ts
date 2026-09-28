@@ -242,7 +242,7 @@ test('theme toggle persists across navigation and reload on mobile and desktop',
     await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(250, 247, 242)');
     await page.reload();
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
-    await expect(page.locator('.braider-portrait-image')).toHaveCSS('object-fit', 'contain');
+    await expect(page.locator('.braider-portrait-image')).toHaveCSS('object-fit', 'cover');
     await page.getByRole('link', { name: 'Book now', exact: false }).first().click();
     await expect(page).toHaveURL(/\/book$/);
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
@@ -379,4 +379,46 @@ test('phone: no sideways drift, the menu stays still when switching rows, and ph
   await page.getByRole('button', { name: /^Enlarge photo 2 of 3/ }).click();
   await page.getByRole('button', { name: 'Close photo' }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
+});
+
+test('she can change her name, location, payment line, contact text, service order and visibility, and her photo', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/demo/admin');
+  await page.getByRole('button', { name: 'Website', exact: true }).click();
+  await page.getByRole('tab', { name: 'Text' }).click();
+  await page.getByRole('textbox', { name: /^Your name/ }).fill('Amewusika Amedeker');
+  await page.getByRole('textbox', { name: /^Location/ }).fill('Woodbridge, Ontario');
+  await page.getByLabel('How clients can pay').fill('E-transfer or cash');
+  await page.getByLabel('Contact heading', { exact: true }).fill('Got a question?');
+  await page.getByLabel('Contact message').fill('DM me any time.');
+  await page.getByRole('button', { name: 'Save text' }).click();
+  await expect(page.getByRole('status')).toContainText('Text saved');
+  // Move the second knotless service to the top, and hide the last one.
+  await page.getByRole('tab', { name: 'Menu' }).click();
+  const knotless = page.locator('.editor-group', { hasText: 'Knotless braids' }).first();
+  await knotless.getByRole('button', { name: 'Move Large Knotless Braids — Shoulder Length up' }).click();
+  await expect(page.getByRole('status')).toContainText('Order saved');
+  await knotless.locator('.editor-row', { hasText: 'Small Knotless Braids — Mid-Back Length' }).getByRole('button', { name: 'Edit' }).click();
+  await page.getByRole('form', { name: 'Edit Small Knotless Braids — Mid-Back Length' }).getByLabel('Show on the website').uncheck();
+  await page.getByRole('button', { name: 'Save service' }).click();
+  await expect(page.getByRole('status')).toContainText('Service saved');
+  // Replace her photo.
+  await page.getByRole('tab', { name: 'Photos' }).click();
+  await page.getByLabel('Replace your photo').setInputFiles('public/images/styles/soft-locs/soft-locs-01.jpg');
+  await expect(page.getByRole('status')).toContainText('Photo');
+  await expect(page.getByRole('region', { name: 'Your photo' }).locator('img')).toHaveAttribute('src', /^data:image\/jpeg/);
+  // Everything shows on the public page.
+  await page.goto('/');
+  await expect(page.locator('.hero h1 em')).toHaveText('Amewusika.');
+  await expect(page.locator('.hero-address')).toHaveText('Woodbridge, Ontario');
+  await expect(page.locator('.hero-facts')).toContainText('E-transfer or cash');
+  await expect(page.locator('.announcement')).toContainText('WOODBRIDGE, ONTARIO');
+  await expect(page.locator('#contact-heading')).toHaveText(/Got a question\?/);
+  await expect(page.locator('#contact')).toContainText('DM me any time.');
+  await expect(page.locator('.footer')).toContainText('Braids by Amewusika Amedeker.');
+  await expect(page.locator('.braider-portrait-image')).toHaveAttribute('src', /^data:image\/jpeg/);
+  await page.locator('#menu-knotless .menu-row-head').click();
+  await expect(page.locator('#menu-knotless .service').first()).toContainText('Shoulder Length');
+  await expect(page.locator('#small-knotless-mid-back')).toHaveCount(0);
+  await expect(page.locator('#menu-knotless .service')).toHaveCount(6);
 });
