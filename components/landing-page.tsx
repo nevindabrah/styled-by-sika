@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import Link from 'next/link';
 import { ArrowDown, ArrowUpRight, Instagram, Mail, MapPin, MessageSquare } from 'lucide-react';
 import { firstName, instagramLinks, portraitOf, type SiteContent } from '@/lib/content';
@@ -13,6 +14,7 @@ import { Spark } from './spark';
 // The whole public page, rendered from the content Sika edits in her dashboard.
 export function LandingPage({ content: initial }: { content: SiteContent }) {
   const content = useSiteContent(initial);
+  useEffect(() => { const fresh = (e: PageTransitionEvent) => { if (e.persisted) location.reload(); }; addEventListener('pageshow', fresh); return () => removeEventListener('pageshow', fresh); }, []);
   const { text } = content, ig = instagramLinks(text.instagramHandle), showPrices = !content.placeholder;
   const groups = content.categories.map(c => ({ slug: c.slug, label: c.label, services: content.services.filter(s => s.category === c.slug), photos: content.photos.filter(p => p.category === c.slug) })).filter(g => g.services.length);
   const lowest = content.services.length ? Math.min(...content.services.map(s => s.price_cents)) : 0;

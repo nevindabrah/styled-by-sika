@@ -791,3 +791,8 @@ html { overflow-x: hidden; overflow-x: clip; }
 .portrait-editor { display: flex; gap: 14px; align-items: center; padding-bottom: 14px; }
 .portrait-editor img { width: 96px; height: 124px; object-fit: cover; border-radius: 48px 48px 12px 12px; flex-shrink: 0; }
 .portrait-editor p { margin: 0 0 10px; font-size: 14px; }
+
+/* Sticky reminder while there are unsaved edits. */
+.unsaved-bar { position: sticky; bottom: calc(10px + env(safe-area-inset-bottom)); z-index: 30; display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 16px; padding: 10px 10px 10px 18px; border: 1px solid var(--accent); border-radius: 999px; background: #2a2140f2; box-shadow: 0 10px 30px #0008; font-size: 15px; font-weight: 600; }
+.unsaved-bar .button { border-radius: 999px; }
+[data-theme="light"] .unsaved-bar { background: #efe6fbf2; }

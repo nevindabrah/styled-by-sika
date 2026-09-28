@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useUnsavedWarning } from '@/lib/use-unsaved-warning';
 import { formatInTimeZone, fromZonedTime } from 'date-fns-tz';
 import { Trash2 } from 'lucide-react';
 import { weekdayNames, type TimeOff, type WeekHours } from '@/lib/availability';
@@ -30,6 +31,7 @@ export function AvailabilityEditor({ hours: initial, timeOff, timezone, rules: s
   const [date, setDate] = useState(''), [from, setFrom] = useState('09:00'), [to, setTo] = useState('20:00'), [allDay, setAllDay] = useState(true), [reason, setReason] = useState('');
   const dirty = JSON.stringify(hours) !== JSON.stringify(initial);
   const invalid = hours.some(d => d.open && d.close && d.open >= d.close);
+  useUnsavedWarning(dirty || rulesDirty);
 
   async function run(work: () => Promise<void>, done: string) {
     setBusy(true); setMessage('');
@@ -55,6 +57,7 @@ export function AvailabilityEditor({ hours: initial, timeOff, timezone, rules: s
       })}
     </div>
     {invalid && <p className="field-error">Closing time must be after opening time.</p>}
+    {(dirty || rulesDirty) && <div className="unsaved-bar"><span>Unsaved changes</span>{dirty && <button className="button button-small" disabled={busy || invalid} onClick={() => run(() => onSaveHours(hours), 'Hours saved. New bookings follow these times.')}>Save hours</button>}{rulesDirty && <button className="button button-small" disabled={busy} onClick={() => run(() => onSaveRules(rules), 'Booking rules saved.')}>Save rules</button>}</div>}
     <div className="admin-actions">
       <button className="button" disabled={busy || !dirty || invalid} onClick={() => run(() => onSaveHours(hours), 'Hours saved. New bookings follow these times.')}>Save hours</button>
       {dirty && <button className="button button-outline" disabled={busy} onClick={() => setHours(initial)}>Undo changes</button>}

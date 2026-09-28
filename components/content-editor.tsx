@@ -1,6 +1,7 @@
 'use client';
 
-import { useRef, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useUnsavedWarning } from '@/lib/use-unsaved-warning';
 import Image from 'next/image';
 import { ArrowDown, ArrowUp, Plus, Trash2, Upload } from 'lucide-react';
 import { portraitCategory, portraitOf, type Category, type ContentOp, type Photo, type Policy, type SiteContent, type SiteText } from '@/lib/content';
@@ -16,13 +17,18 @@ const tabs = ['Text', 'Menu', 'Add-ons', 'Photos'] as const;
 export function ContentEditor({ content, onApply }: { content: SiteContent; onApply: Apply }) {
   const [tab, setTab] = useState<(typeof tabs)[number]>('Menu');
   const [message, setMessage] = useState('');
+  const textDirty = useRef(false);
+  function switchTab(next: (typeof tabs)[number]) {
+    if (next !== tab && textDirty.current && !confirm('You have unsaved changes to your text. Leave without saving?')) return;
+    textDirty.current = false; setTab(next); setMessage('');
+  }
   const apply: Apply = async op => { setMessage(''); try { const m = await onApply(op); setMessage(m); return m; } catch (e) { const m = (e as Error).message || 'Could not save. Please try again.'; setMessage(m); throw e; } };
   return <section className="content-editor" aria-labelledby="editor-heading">
     <h2 id="editor-heading" className="small-heading">Your website</h2>
     <p className="muted">Changes go live on the website as soon as you save them.</p>
-    <div className="chips editor-tabs" role="tablist" aria-label="What to edit">{tabs.map(t => <button key={t} role="tab" aria-selected={tab === t} className={`chip ${tab === t ? 'selected' : ''}`} onClick={() => { setTab(t); setMessage(''); }}>{t}</button>)}</div>
+    <div className="chips editor-tabs" role="tablist" aria-label="What to edit">{tabs.map(t => <button key={t} role="tab" aria-selected={tab === t} className={`chip ${tab === t ? 'selected' : ''}`} onClick={() => switchTab(t)}>{t}</button>)}</div>
     {message && <p className="status-message" role="status">{message}</p>}
-    {tab === 'Text' && <TextTab text={content.text} apply={apply} />}
+    {tab === 'Text' && <TextTab text={content.text} apply={apply} onDirty={d => { textDirty.current = d; }} />}
     {tab === 'Menu' && <MenuTab content={content} apply={apply} />}
     {tab === 'Add-ons' && <ExtrasTab extras={content.extras} apply={apply} />}
     {tab === 'Photos' && <PhotosTab content={content} apply={apply} />}
@@ -36,10 +42,12 @@ const dollars = (cents: number) => String(Math.round(cents / 100));
 const cents = (value: string) => Math.max(0, Math.round(Number(value || 0) * 100));
 
 /* ---------- Text ---------- */
-function TextTab({ text: saved, apply }: { text: SiteText; apply: Apply }) {
+function TextTab({ text: saved, apply, onDirty }: { text: SiteText; apply: Apply; onDirty: (dirty: boolean) => void }) {
   const [t, setT] = useState<SiteText>(saved);
   const [busy, setBusy] = useState(false);
   const dirty = JSON.stringify(t) !== JSON.stringify(saved);
+  useEffect(() => { onDirty(dirty); }, [dirty, onDirty]);
+  useUnsavedWarning(dirty);
   const set = (patch: Partial<SiteText>) => setT({ ...t, ...patch });
   const setPolicy = (i: number, patch: Partial<Policy>) => set({ policies: t.policies.map((p, j) => j === i ? { ...p, ...patch } : p) });
   const movePolicy = (i: number, d: number) => { const list = [...t.policies]; const [p] = list.splice(i, 1); list.splice(i + d, 0, p); set({ policies: list }); };
@@ -84,6 +92,7 @@ function TextTab({ text: saved, apply }: { text: SiteText; apply: Apply }) {
     <Field label="Thank-you title"><input value={t.thankYouTitle} maxLength={120} onChange={e => set({ thankYouTitle: e.target.value })} /></Field>
     <Field label="Thank-you line"><input value={t.thankYouBody} maxLength={600} onChange={e => set({ thankYouBody: e.target.value })} /></Field>
     <div className="admin-actions"><button type="button" className="button" disabled={!dirty || busy} onClick={save}>Save text</button>{dirty && <button type="button" className="button button-outline" disabled={busy} onClick={() => setT(saved)}>Undo changes</button>}</div>
+    {dirty && <div className="unsaved-bar"><span>Unsaved changes</span><button type="button" className="button button-small" disabled={busy} onClick={save}>{busy ? 'Saving…' : 'Save text'}</button></div>}
   </div>;
 }
 

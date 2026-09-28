@@ -281,7 +281,7 @@ test('the braider controls which times clients can book from her dashboard', asy
     await page.getByLabel(`${day} opening time`).fill('10:00');
     await page.getByLabel(`${day} closing time`).fill('14:00');
   }
-  await page.getByRole('button', { name: 'Save hours' }).click();
+  await page.getByRole('button', { name: 'Save hours' }).last().click();
   await expect(page.getByRole('status')).toContainText('Hours saved');
   // Block one whole weekday in the middle of next month.
   const blocked = new Date(); blocked.setDate(1); blocked.setMonth(blocked.getMonth() + 1); blocked.setDate(10);
@@ -317,7 +317,7 @@ test('the braider can change words, prices, services and photos from her dashboa
   await page.getByRole('tab', { name: 'Text' }).click();
   await page.getByLabel('Services line under your name').fill('Knotless, boho, locs and more.');
   await page.getByLabel('Deposit amount (CA$)').fill('25');
-  await page.getByRole('button', { name: 'Save text' }).click();
+  await page.getByRole('button', { name: 'Save text' }).last().click();
   await expect(page.getByRole('status')).toContainText('Text saved');
   // Menu: change a price, add a service, add a category
   await page.getByRole('tab', { name: 'Menu' }).click();
@@ -410,7 +410,7 @@ test('she can change her name, location, payment line, contact text, service ord
   await page.getByLabel('How clients can pay').fill('E-transfer or cash');
   await page.getByLabel('Contact heading', { exact: true }).fill('Got a question?');
   await page.getByLabel('Contact message').fill('DM me any time.');
-  await page.getByRole('button', { name: 'Save text' }).click();
+  await page.getByRole('button', { name: 'Save text' }).last().click();
   await expect(page.getByRole('status')).toContainText('Text saved');
   // Move the second knotless service to the top, and hide the last one.
   await page.getByRole('tab', { name: 'Menu' }).click();
@@ -440,4 +440,28 @@ test('she can change her name, location, payment line, contact text, service ord
   await expect(page.locator('#menu-knotless .service').first()).toContainText('Shoulder Length');
   await expect(page.locator('#small-knotless-mid-back')).toHaveCount(0);
   await expect(page.locator('#menu-knotless .service')).toHaveCount(6);
+});
+
+test('unsaved edits are flagged and she is asked before losing them', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/demo/admin');
+  await page.getByRole('button', { name: 'Website', exact: true }).click();
+  await page.getByRole('tab', { name: 'Text' }).click();
+  await page.getByLabel('Services line under your name').fill('Braids, twists and locs.');
+  const bar = page.locator('.unsaved-bar');
+  await expect(bar).toContainText('Unsaved changes');
+  await expect(bar).toBeInViewport();
+  // Switching tabs asks first; saying no keeps her edit.
+  page.once('dialog', d => { expect(d.message()).toContain('unsaved changes'); d.dismiss(); });
+  await page.getByRole('tab', { name: 'Menu' }).click();
+  await expect(page.getByLabel('Services line under your name')).toHaveValue('Braids, twists and locs.');
+  await bar.getByRole('button', { name: 'Save text' }).click();
+  await expect(page.getByRole('status').filter({ hasText: 'Text saved' })).toBeVisible();
+  await expect(bar).toHaveCount(0);
+  await page.getByRole('tab', { name: 'Menu' }).click(); // no prompt once saved
+  await page.getByRole('button', { name: 'Availability', exact: true }).click();
+  await page.getByRole('checkbox', { name: 'Sunday' }).check();
+  await expect(page.locator('.unsaved-bar')).toContainText('Unsaved changes');
+  await page.locator('.unsaved-bar').getByRole('button', { name: 'Save hours' }).click();
+  await expect(page.getByRole('status').filter({ hasText: 'Hours saved' })).toBeVisible();
 });
