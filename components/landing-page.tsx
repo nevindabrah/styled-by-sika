@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { ArrowDown, ArrowUpRight, Instagram, Mail, MapPin, MessageSquare } from 'lucide-react';
 import { firstName, instagramLinks, portraitOf, type SiteContent } from '@/lib/content';
 import { useSiteContent } from '@/lib/use-site-content';
+import { useReveal } from '@/lib/use-reveal';
 import { money } from '@/lib/pricing';
 import { BraiderIntro } from './braider-intro';
 import { MenuAccordion } from './menu-accordion';
@@ -14,6 +15,7 @@ import { Spark } from './spark';
 // The whole public page, rendered from the content Sika edits in her dashboard.
 export function LandingPage({ content: initial }: { content: SiteContent }) {
   const content = useSiteContent(initial);
+  useReveal('.section-heading, .menu-row, .policies-intro, .policy, .closing-cta');
   useEffect(() => { const fresh = (e: PageTransitionEvent) => { if (e.persisted) location.reload(); }; addEventListener('pageshow', fresh); return () => removeEventListener('pageshow', fresh); }, []);
   const { text } = content, ig = instagramLinks(text.instagramHandle), showPrices = !content.placeholder;
   const groups = content.categories.map(c => ({ slug: c.slug, label: c.label, services: content.services.filter(s => s.category === c.slug), photos: content.photos.filter(p => p.category === c.slug) })).filter(g => g.services.length);

@@ -45,7 +45,7 @@ export function AvailabilityEditor({ hours: initial, timeOff, timezone, rules: s
 
   return <section className="availability" aria-labelledby="availability-heading">
     <h2 id="availability-heading" className="small-heading">Your availability</h2>
-    <p className="muted">Clients can only pick start times inside these hours that leave room for the whole appointment plus your {buffer}-minute break before the next client. Times are {timezone.replace('_', ' ')}.</p>
+    <p className="muted">Your hours are the times you’re happy to <strong>start</strong> an appointment. Clients can start at any half hour from your From time up to your To time, however long the style takes. Two appointments never overlap, and you get your {buffer}-minute break after each one. Times are {timezone.replace('_', ' ')}.</p>
 
     <WeekPlanner week={initial} plans={plans} windowDays={savedRules.window_days} busy={busy} run={run} onSaveDays={onSaveDays} onClearDays={onClearDays} />
 
@@ -134,7 +134,7 @@ function WeekPlanner({ week, plans, windowDays, busy, run, onSaveDays, onClearDa
     `Copied this week’s hours to the next ${repeat} ${repeat === 1 ? 'week' : 'weeks'}.`);
   return <section className="week-planner" aria-labelledby="planner-heading">
     <h3 id="planner-heading" className="availability-subheading">Plan your weeks</h3>
-    <p className="muted">Set your hours for a specific week, as far ahead as you like. Clients see start times every 30 minutes within these hours.</p>
+    <p className="muted">Set the times you’re happy to start appointments for a specific week, as far ahead as you like. Clients see a start time every 30 minutes from your From time to your To time.</p>
     <div className="week-nav">
       <button type="button" className="icon-button" aria-label="Previous week" disabled={start <= thisMonday} onClick={() => go(addDays(start, -7))}><ChevronLeft size={18} /></button>
       <strong aria-live="polite">{format(start, 'MMM d')} – {format(dates[6], 'MMM d, yyyy')}</strong>

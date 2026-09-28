@@ -828,3 +828,42 @@ html { overflow-x: hidden; overflow-x: clip; }
 @keyframes shimmer { from { background-position: 100% 0; } to { background-position: -150% 0; } }
 .visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 @media (prefers-reduced-motion: reduce) { .calendar-loading-word { color: var(--paper); background: none; } }
+
+/* ---------- Motion: smooth, light, and off for reduced motion ---------- */
+html { scroll-padding-top: calc(var(--sticky-top) + 8px); }
+:root { --ease-out: cubic-bezier(.2, .7, .2, 1); }
+
+/* Scroll reveal (added by JavaScript only, so content is never hidden without it). */
+.reveal { opacity: 0; transform: translateY(18px); transition: opacity .65s var(--ease-out) var(--reveal-delay, 0ms), transform .65s var(--ease-out) var(--reveal-delay, 0ms); }
+.reveal.is-visible { opacity: 1; transform: none; }
+
+/* Buttons and tappable things: a soft press on tap; the hover lift only where there's a mouse. */
+.button, .chip, .icon-button, .nav-link, .service-book, .chooser-option, .calendar-grid button, .work-photo, .menu-row-head, .chooser-head, .editor-group-head, .addon {
+  transition: transform .18s var(--ease-out), background-color .2s ease, border-color .2s ease, color .2s ease, box-shadow .2s ease, opacity .2s ease;
+}
+@media (hover: none) { .button:hover, a.button:hover, button.button:hover { transform: none; } }
+@media (hover: hover) {
+  .service:hover { border-color: #b3a0ff66; }
+  .work-photo img { transition: transform .35s var(--ease-out); }
+  .work-photo:hover img { transform: scale(1.04); }
+  .chooser-option:hover { transform: translateY(-1px); }
+}
+.button:active, .chip:active, .icon-button:active, .nav-link:active, .service-book:active, .chooser-option:active, .work-photo:active, .calendar-grid button:active:not(:disabled) { transform: scale(.96); }
+.menu-row-head:active, .chooser-head:active, .editor-group-head:active, .addon:active { transform: scale(.99); }
+.service { transition: border-color .25s ease, background-color .3s ease; }
+
+/* Things opening: menu rows, service options, booking steps, confirmation, photo viewer. */
+@keyframes ease-in-down { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
+@keyframes ease-in-up { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes zoom-in { from { opacity: 0; transform: scale(.96); } to { opacity: 1; transform: none; } }
+.menu-row-body:not([hidden]), .chooser-options:not([hidden]) { animation: ease-in-down .32s var(--ease-out); }
+.step-panel, .receipt, .picked-service, .booking-step { animation: ease-in-up .38s var(--ease-out) both; }
+.booking-step + .booking-step { animation-delay: .08s; }
+.chips .chip.selected, .calendar-grid button.selected { animation: zoom-in .2s var(--ease-out); }
+.photo-viewer[open] { animation: fade-in .22s ease-out; }
+.photo-viewer-figure img { animation: zoom-in .3s var(--ease-out); }
+.status-message, .notice[role=status] { animation: ease-in-up .3s var(--ease-out); }
+
+/* Light/dark switch fades instead of snapping. */
+body, .header, .announcement, .braider-intro, .policy, .service, .notice, .quote-summary, .footer { transition: background-color .35s ease, color .35s ease, border-color .35s ease; }

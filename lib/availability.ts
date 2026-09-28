@@ -22,8 +22,9 @@ export function slotsForDay(input:{date:string;open:string|null;close:string|nul
  const {start,end}=dayBounds(date,open,close,timezone);
  const min=now.getTime()+noticeHours*3600000,max=now.getTime()+windowDays*86400000;
  const slots:string[]=[];
+ // Her hours are the window she's happy to START in (end time included); a long style may run past it.
  // Walk real instants through timezone transitions; only local half-hours are offered.
- for(let t=start.getTime();t+duration*60000<=end.getTime();t+=60000){
+ for(let t=start.getTime();t<=end.getTime();t+=60000){
  const minute=Number(formatInTimeZone(t,timezone,'mm'));
  if(minute%30 || t<min || t>max) continue;
  const blockedEnd=t+(duration+buffer)*60000;

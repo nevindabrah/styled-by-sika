@@ -9,7 +9,7 @@ export default defineConfig({
   fullyParallel: false,
   workers: 1,
   // Local runs use installed Google Chrome (or CHROME_PATH); CI uses Playwright's bundled Chromium.
-  use: { baseURL: 'http://127.0.0.1:3002', headless: true, launchOptions: chromePath ? { executablePath: chromePath } : {}, trace: 'retain-on-failure' },
+  use: { baseURL: 'http://127.0.0.1:3002', headless: true, reducedMotion: 'reduce', launchOptions: chromePath ? { executablePath: chromePath } : {}, trace: 'retain-on-failure' },
   reporter: [['list']],
   webServer: { command: 'npm run demo', url: 'http://127.0.0.1:3002', reuseExistingServer: true, timeout: 30000 },
 });

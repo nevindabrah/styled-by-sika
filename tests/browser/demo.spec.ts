@@ -306,7 +306,7 @@ test('the braider controls which times clients can book from her dashboard', asy
   await page.locator('.calendar-grid button:enabled').nth(1).click();
   const labels = await page.getByRole('button', { name: /^\d{1,2}:\d{2} [AP]M$/ }).allTextContents();
   expect(labels[0]).toBe('10:00 AM');
-  expect(labels.at(-1)).toBe('12:00 PM'); // last 2-hour start before a 2:00 PM close
+  expect(labels.at(-1)).toBe('2:00 PM'); // starts run up to her end time, whatever the length
 });
 
 test('the braider can change words, prices, services and photos from her dashboard', async ({ page }) => {
@@ -493,7 +493,8 @@ test('she plans a week months ahead; clients book it and a 6-hour booking blocks
   await goToMonth(page, target);
   const longLabel = target.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
   await page.getByRole('button', { name: longLabel, exact: true }).click();
-  expect(await page.getByRole('button', { name: /^\d{1,2}:\d{2} [AP]M$/ }).allTextContents()).toEqual(['12:00 PM', '12:30 PM', '1:00 PM', '1:30 PM', '2:00 PM']);
+  const offered = await page.getByRole('button', { name: /^\d{1,2}:\d{2} [AP]M$/ }).allTextContents();
+  expect(offered[0]).toBe('12:00 PM'); expect(offered.at(-1)).toBe('8:00 PM'); expect(offered).toHaveLength(17); // start window 12–8, any length
   // It's the only open day that month.
   expect(await page.locator('.calendar-grid button:enabled').count()).toBe(1);
   await page.getByRole('button', { name: '12:00 PM', exact: true }).click();
@@ -508,7 +509,8 @@ test('she plans a week months ahead; clients book it and a 6-hour booking blocks
   await goToMonth(page, target);
   const day = page.getByRole('button', { name: longLabel, exact: true });
   const times = await day.isEnabled() ? (await day.click(), await page.getByRole('button', { name: /^\d{1,2}:\d{2} [AP]M$/ }).allTextContents()) : [];
-  expect(times.filter(t => /^(12|[1-5]):\d\d PM$/.test(t))).toEqual([]);
+  expect(times.filter(t => /^(12|[1-5]):\d\d PM$/.test(t) || t === '6:00 PM')).toEqual([]);
+  expect(times).toEqual(['6:30 PM', '7:00 PM', '7:30 PM', '8:00 PM']); // after 6:00 plus her 30-minute break
 });
 
 test('her photo is on the right of the welcome card on phones, tablets and laptops', async ({ page }) => {
@@ -532,4 +534,21 @@ test('a friendly loading animation shows while the calendar is checked', async (
   await expect(loader.locator('.calendar-loading-word')).toHaveText(/…$/);
   await expect(loader).toHaveCount(0, { timeout: 30000 });
   await expect(page.locator('.calendar-grid button:enabled').first()).toBeVisible();
+});
+
+test.describe('with motion on', () => {
+  test.use({ reducedMotion: 'no-preference' });
+  test('sections fade in as they scroll into view, and nothing drifts sideways', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/');
+    const policy = page.locator('.policy').first();
+    await expect(policy).toHaveClass(/reveal/);
+    await expect(policy).not.toHaveClass(/is-visible/);
+    await policy.scrollIntoViewIfNeeded();
+    await expect(policy).toHaveClass(/is-visible/);
+    await expect.poll(() => policy.evaluate(el => Number(getComputedStyle(el).opacity))).toBe(1);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBe(0);
+    // Things already on screen when the page opens never start hidden.
+    await expect(page.locator('.hero-copy')).not.toHaveClass(/reveal/);
+  });
 });
