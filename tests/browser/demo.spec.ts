@@ -8,7 +8,7 @@ async function goToMonth(page: import('@playwright/test').Page, date: Date) {
   const header = page.locator('.calendar-header strong');
   await expect(header).not.toHaveText('');
   await expect(page.locator('.fine-print[role=status]')).not.toHaveText('Checking the calendar…');
-  for (let i = 0; i < 4 && (await header.textContent()) !== target; i++) {
+  for (let i = 0; i < 14 && (await header.textContent()) !== target; i++) {
     const [m, y] = [(await header.textContent())!, target];
     const later = new Date(`1 ${y}`) > new Date(`1 ${m}`);
     await page.getByRole('button', { name: later ? 'Next month' : 'Previous month' }).click();
@@ -464,4 +464,49 @@ test('unsaved edits are flagged and she is asked before losing them', async ({ p
   await expect(page.locator('.unsaved-bar')).toContainText('Unsaved changes');
   await page.locator('.unsaved-bar').getByRole('button', { name: 'Save hours' }).click();
   await expect(page.getByRole('status').filter({ hasText: 'Hours saved' })).toBeVisible();
+});
+
+test('she plans a week months ahead; clients book it and a 6-hour booking blocks 12–6', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  // Pick a Wednesday about four months out.
+  const target = new Date(); target.setMonth(target.getMonth() + 4); target.setDate(1); while (target.getDay() !== 3) target.setDate(target.getDate() + 1);
+  const monthValue = `${target.getFullYear()}-${String(target.getMonth() + 1).padStart(2, '0')}`;
+  const dayLabel = target.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+  await page.goto('/demo/admin');
+  await page.getByRole('button', { name: 'Availability', exact: true }).click();
+  // Only planned weeks are open: close her usual week.
+  for (const day of ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']) await page.getByRole('checkbox', { name: day, exact: true }).uncheck();
+  await page.getByRole('button', { name: 'Save hours' }).last().click();
+  await expect(page.getByRole('status').filter({ hasText: 'Hours saved' })).toBeVisible();
+  // Jump to that month and plan the week: Wednesday 12–8.
+  await page.getByLabel('Jump to month').selectOption(monthValue);
+  while (!(await page.getByLabel(`Open on ${dayLabel}`).count())) await page.getByRole('button', { name: 'Next week' }).click();
+  await page.getByLabel(`Open on ${dayLabel}`).check();
+  await page.getByLabel(`${dayLabel} from`).fill('12:00');
+  await page.getByLabel(`${dayLabel} to`).fill('20:00');
+  await page.getByRole('button', { name: 'Save this week' }).first().click();
+  await expect(page.getByRole('status').filter({ hasText: 'Saved the week of' })).toBeVisible();
+  await expect(page.locator('.hours-row', { hasText: dayLabel }).locator('.day-source')).toHaveText('this week');
+  // Client: a 6-hour style (Medium Miracle Knots — Mid-Back) on that Wednesday.
+  await page.goto('/book?service=medium-miracle-knots-mid-back');
+  await page.getByRole('button', { name: 'Choose your time' }).click();
+  await goToMonth(page, target);
+  const longLabel = target.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+  await page.getByRole('button', { name: longLabel, exact: true }).click();
+  expect(await page.getByRole('button', { name: /^\d{1,2}:\d{2} [AP]M$/ }).allTextContents()).toEqual(['12:00 PM', '12:30 PM', '1:00 PM', '1:30 PM', '2:00 PM']);
+  // It's the only open day that month.
+  expect(await page.locator('.calendar-grid button:enabled').count()).toBe(1);
+  await page.getByRole('button', { name: '12:00 PM', exact: true }).click();
+  await page.getByRole('button', { name: 'Your details', exact: true }).click();
+  await page.getByLabel('Full name').fill('Jordan Client'); await page.getByLabel('Phone number').fill('4165550123'); await page.getByLabel('Email address').fill('jordan@example.com');
+  await page.getByRole('checkbox', { name: /booking policies/ }).check();
+  await page.getByRole('button', { name: 'Review booking' }).click(); await page.getByRole('button', { name: 'Confirm booking', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Booking confirmed.' })).toBeVisible();
+  // Another client, even for a short style, can't get anything between 12 and 6.
+  await page.goto('/book?service=natural-hair-twists');
+  await page.getByRole('button', { name: 'Choose your time' }).click();
+  await goToMonth(page, target);
+  const day = page.getByRole('button', { name: longLabel, exact: true });
+  const times = await day.isEnabled() ? (await day.click(), await page.getByRole('button', { name: /^\d{1,2}:\d{2} [AP]M$/ }).allTextContents()) : [];
+  expect(times.filter(t => /^(12|[1-5]):\d\d PM$/.test(t))).toEqual([]);
 });

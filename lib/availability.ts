@@ -4,6 +4,15 @@ export type Busy = { start: string; end: string };
 export type DayHours = { open: string | null; close: string | null };
 export type WeekHours = DayHours[];
 export type TimeOff = { id: string; start_at: string; end_at: string; reason: string };
+// Hours she planned for specific dates ('YYYY-MM-DD'); null times mean closed that day.
+export type DayPlans = Record<string, DayHours>;
+export type DayPlan = DayHours & { date: string };
+export function hoursForDate(date: string, week: WeekHours, plans: DayPlans): DayHours & { planned: boolean } {
+  const planned = plans[date];
+  if (planned) return { ...planned, planned: true };
+  const usual = week[weekdayOf(date)] ?? { open: null, close: null };
+  return { open: usual.open, close: usual.close, planned: false };
+}
 export const weekdayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 export const weekdayOf = (date: string) => Number(formatInTimeZone(new Date(`${date}T12:00:00Z`), 'UTC', 'i')) % 7;
 export function dayBounds(date:string,open:string,close:string,timezone:string) { return {start:fromZonedTime(`${date}T${open}`,timezone),end:fromZonedTime(`${date}T${close}`,timezone)}; }

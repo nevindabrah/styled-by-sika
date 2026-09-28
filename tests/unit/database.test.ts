@@ -14,6 +14,8 @@ beforeAll(async()=>{
  await db.exec(readFileSync('supabase/migrations/005_time_off.sql','utf8'));
  await db.exec(readFileSync('supabase/migrations/006_site_content.sql','utf8'));
  await db.exec(readFileSync('supabase/migrations/007_reminders.sql','utf8'));
+ await db.exec(readFileSync('supabase/migrations/008_booking_switch.sql','utf8'));
+ await db.exec(readFileSync('supabase/migrations/009_week_planner.sql','utf8'));
  for(const [table,rows] of [['styles',seedCatalog.services.map(serviceRow)],['addons',seedCatalog.extras.map(extraRow)]] as const){
   for(const row of rows){ const keys=Object.keys(row); await db.query(`insert into ${table} (${keys.join(',')}) values (${keys.map((_,i)=>'$'+(i+1)).join(',')})`,Object.values(row)); }
  }
@@ -33,7 +35,7 @@ describe('booking storage and database permissions',()=>{
  it('keeps personal data and background jobs inaccessible to browser roles',async()=>{
   for(const role of ['anon','authenticated']){
    await db.exec(`set role ${role}`);
-   for(const table of ['bookings','booking_jobs','business_settings','time_off','site_content','style_photos']) await expect(db.query(`select * from ${table}`)).rejects.toMatchObject({code:'42501'});
+   for(const table of ['bookings','booking_jobs','business_settings','time_off','site_content','style_photos','availability_days']) await expect(db.query(`select * from ${table}`)).rejects.toMatchObject({code:'42501'});
    await expect(db.query("select * from claim_booking_job(null)")).rejects.toMatchObject({code:'42501'});
    await expect(db.query("update styles set base_price_cents=1")).rejects.toMatchObject({code:'42501'});
    await db.exec('reset role');

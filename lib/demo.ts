@@ -3,17 +3,18 @@ import type { Booking } from './types';
 import { seedCatalog } from './seed';
 import { quote } from './pricing';
 import { depositSummary } from './business';
-import { slotsForDay, weekdayOf, type TimeOff, type WeekHours } from './availability';
+import { hoursForDate, slotsForDay, type DayPlans, type TimeOff, type WeekHours } from './availability';
 
 export const isDemo = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
 const storageKey = 'styled-by-sika-demo-appointments';
 const settingsKey = 'styled-by-sika-demo-availability';
-export const demoTimezone = 'America/Toronto', demoBuffer = 30, demoNoticeHours = 24, demoWindowDays = 60;
+export const demoTimezone = 'America/Toronto', demoBuffer = 30, demoNoticeHours = 24, demoWindowDays = 365;
 
 // Demonstration fixtures only: these are not the braider's real hours. She edits them in the demo dashboard.
-export type DemoAvailability = { hours: WeekHours; timeOff: TimeOff[]; rules: { buffer_min: number; minimum_notice_hours: number; window_days: number } };
+export type DemoAvailability = { hours: WeekHours; days: DayPlans; timeOff: TimeOff[]; rules: { buffer_min: number; minimum_notice_hours: number; window_days: number } };
 export const sampleAvailability = (): DemoAvailability => ({
   hours: [{ open: null, close: null }, ...Array.from({ length: 6 }, () => ({ open: '09:00', close: '20:00' }))],
+  days: {},
   timeOff: [],
   rules: { buffer_min: demoBuffer, minimum_notice_hours: demoNoticeHours, window_days: demoWindowDays },
 });
@@ -26,8 +27,8 @@ export function saveDemoAvailability(settings: DemoAvailability) { sessionStorag
 
 // Same rules as the live site: her hours, minus time off and every saved appointment plus the clean-up buffer.
 export function demoSlots(date: string, duration: number): string[] {
-  const { hours, timeOff, rules } = readDemoAvailability();
-  const day = hours[weekdayOf(date)];
+  const { hours, days, timeOff, rules } = readDemoAvailability();
+  const day = hoursForDate(date, hours, days ?? {});
   const busy = [
     ...readDemoBookings().filter(b => b.status !== 'cancelled').map(b => ({ start: b.start_at, end: b.end_at })),
     ...timeOff.map(t => ({ start: t.start_at, end: t.end_at })),

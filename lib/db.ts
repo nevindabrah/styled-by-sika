@@ -33,7 +33,7 @@ export async function getContent(all=false):Promise<SiteContent>{
 }
 export async function getCatalog():Promise<Catalog>{const c=await getContent();return {services:c.services,extras:c.extras,placeholder:c.placeholder};}
 export async function getSettings():Promise<BusinessSettings>{
- if(!hasDatabase()){const t=defaultText();return {timezone:'America/Toronto',buffer_min:30,minimum_notice_hours:24,window_days:60,deposit_instructions:t.depositSummary,deposit_cents:t.depositCents,prices_confirmed:true,hours_confirmed:false,policies_confirmed:true,booking_open:false};}
+ if(!hasDatabase()){const t=defaultText();return {timezone:'America/Toronto',buffer_min:30,minimum_notice_hours:24,window_days:365,deposit_instructions:t.depositSummary,deposit_cents:t.depositCents,prices_confirmed:true,hours_confirmed:false,policies_confirmed:true,booking_open:false};}
  const {data,error}=await db().from('business_settings').select('*').eq('id',1).single();if(error)throw error; return data;
 }
 export async function bookingReady(){ if(!hasDatabase()) return false; return bookingConfigurationIssues(await getSettings(), process.env).length===0; }

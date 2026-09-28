@@ -74,6 +74,9 @@ export function DemoDashboard() {
         {tab === 'Website' && <ContentEditor content={content} onApply={applyContent} />}
         {tab === 'Availability' && <><AvailabilityEditor hours={availability.hours} timeOff={availability.timeOff} timezone={demoTimezone} rules={availability.rules}
           onSaveRules={async rules => persistAvailability({ ...availability, rules })}
+          plans={availability.days ?? {}}
+          onSaveDays={async days => persistAvailability({ ...availability, days: { ...(availability.days ?? {}), ...Object.fromEntries(days.map(d => [d.date, { open: d.open, close: d.close }])) } })}
+          onClearDays={async (from, to) => persistAvailability({ ...availability, days: Object.fromEntries(Object.entries(availability.days ?? {}).filter(([date]) => date < from || date > to)) })}
           onSaveHours={async hours => persistAvailability({ ...availability, hours })}
           onAddTimeOff={async block => persistAvailability({ ...availability, timeOff: [...availability.timeOff, { id: crypto.randomUUID(), ...block }].sort((a, b) => a.start_at.localeCompare(b.start_at)) })}
           onRemoveTimeOff={async id => persistAvailability({ ...availability, timeOff: availability.timeOff.filter(t => t.id !== id) })} />

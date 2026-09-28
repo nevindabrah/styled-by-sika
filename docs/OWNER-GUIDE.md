@@ -49,11 +49,12 @@ Your name and location, the line under your name, how clients can pay, the welco
 
 ## When clients can book (Availability)
 
-- **Weekly hours**: tick the days you work and set opening and closing times. **Save hours**.
-- **Booking rules**: the break you need between clients, how much notice clients must give (at least 24 hours), and how many days ahead they can book. **Save booking rules**.
+- **Plan your weeks**: pick a week with the arrows or **Jump to** a month (as far ahead as you like, e.g. December while it's still July). Tick the days you're free, set **From** and **To**, then **Save this week**. **Repeat for the next … weeks** copies the same hours forward. Days you set show *this week*; **Use my usual week** undoes a week's changes.
+- **Your usual week** (optional): hours used for any week you haven't planned. Leave every day closed if you only want to open the weeks you plan.
+- **Booking rules**: the break you need between clients, how much notice clients must give (at least 24 hours), and how far ahead they can book (up to a year). **Save booking rules**.
 - **Blocked dates & times**: a holiday, a day off, or a few hours. Tick **Whole day** or set a from/to time, then **Block this time**.
 
-Clients only see start times inside your hours that leave room for the whole appointment plus your break before the next client. Every booked appointment removes its full length from the calendar automatically. Cancelling a booking frees the time again.
+Clients see start times every 30 minutes from your start time, and only times where the whole appointment fits before your end time. Example: free 12–8 and a 6-hour style → clients can start at 12:00, 12:30, 1:00, 1:30 or 2:00. Once someone books 12:00, the whole 12–6 (plus your break) disappears for everyone else. Cancelling a booking frees the time again.
 
 ## How clients book
 

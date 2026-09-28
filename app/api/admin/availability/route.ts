@@ -10,8 +10,11 @@ const body=z.object({
  removeTimeOff:z.uuid().optional(),
  // Limits match the database checks in schema.sql.
  bookingOpen:z.boolean().optional(),
- rules:z.object({buffer_min:z.number().int().min(0).max(240),minimum_notice_hours:z.number().int().min(24).max(720),window_days:z.number().int().min(1).max(60)}).optional(),
-}).refine(v=>v.hours||v.addTimeOff||v.removeTimeOff||v.rules||v.bookingOpen!==undefined);
+ rules:z.object({buffer_min:z.number().int().min(0).max(240),minimum_notice_hours:z.number().int().min(24).max(720),window_days:z.number().int().min(1).max(366)}).optional(),
+ // Week planner: set specific dates, or send them back to her usual week.
+ setDays:z.array(z.object({date:z.iso.date(),open:time.nullable(),close:time.nullable()}).refine(d=>(d.open===null)===(d.close===null)&&(!d.open||!d.close||d.open<d.close),'Closing time must be after opening time.')).min(1).max(400).optional(),
+ clearDays:z.object({from:z.iso.date(),to:z.iso.date()}).optional(),
+}).refine(v=>v.hours||v.addTimeOff||v.removeTimeOff||v.rules||v.setDays||v.clearDays||v.bookingOpen!==undefined);
 // Only the braider (ADMIN_EMAIL) can change availability; clients never reach this route.
 export async function PATCH(request:Request){
  if(!await isAdmin())return NextResponse.json({error:'Please sign in.'},{status:401});
@@ -19,7 +22,9 @@ export async function PATCH(request:Request){
  const parsed=body.safeParse(await request.json().catch(()=>null));
  if(!parsed.success)return NextResponse.json({error:parsed.error.issues[0]?.message||'Please check the times.'},{status:400});
  try{
- const client=db(),{hours,addTimeOff,removeTimeOff,rules,bookingOpen}=parsed.data;
+ const client=db(),{hours,addTimeOff,removeTimeOff,rules,bookingOpen,setDays,clearDays}=parsed.data;
+ if(setDays){const {error}=await client.from('availability_days').upsert(setDays.map(d=>({date:d.date,open_time:d.open,close_time:d.close})),{onConflict:'date'});if(error)throw error;const {error:e}=await client.from('business_settings').update({hours_confirmed:true}).eq('id',1);if(e)throw e;}
+ if(clearDays){const {error}=await client.from('availability_days').delete().gte('date',clearDays.from).lte('date',clearDays.to);if(error)throw error;}
  if(rules){const {error}=await client.from('business_settings').update(rules).eq('id',1);if(error)throw error;}
  if(hours){
   const {error}=await client.from('working_hours').upsert(hours.map((d,weekday)=>({weekday,open_time:d.open,close_time:d.close})),{onConflict:'weekday'});if(error)throw error;

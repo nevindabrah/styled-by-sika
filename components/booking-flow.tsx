@@ -1,5 +1,5 @@
 'use client';
-import { isDemo, demoSlots, addDemoBooking } from '@/lib/demo';
+import { isDemo, demoSlots, addDemoBooking, readDemoAvailability } from '@/lib/demo';
 import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -21,7 +21,7 @@ type Receipt={id:string;reference:string;start_at:string;end_at:string;price_cen
 const policyLink=<Link href="/#before-you-book" target="_blank">booking policies</Link>;
 // Links use readable slugs; ids are accepted too. Resolved on the client so demo edits (new services) work as well.
 function resolve(catalog:Catalog,service:string,extras:string[]):Selection{const s=catalog.services.find(x=>x.slug===service||x.id===service);return {service:s?.id??'',extras:[...new Set(extras.map(x=>catalog.extras.find(e=>(e.slug===x||e.id===x)&&e.bookable)?.id).filter((id):id is string=>!!id))]};}
-export function BookingFlow({content,initialService,initialExtras,ready,smsEnabled=false}:{content:SiteContent;initialService:string;initialExtras:string[];ready:boolean;smsEnabled?:boolean}){
+export function BookingFlow({content,initialService,initialExtras,ready,smsEnabled=false,windowDays:serverWindow=365}:{content:SiteContent;initialService:string;initialExtras:string[];ready:boolean;smsEnabled?:boolean;windowDays?:number}){
  const site=useSiteContent(content);
  const catalog=useMemo<Catalog>(()=>({services:site.services,extras:site.extras,placeholder:site.placeholder}),[site]);
  const [selection,setSelection]=useState<Selection>(()=>resolve(catalog,initialService,initialExtras));
@@ -34,10 +34,13 @@ export function BookingFlow({content,initialService,initialExtras,ready,smsEnabl
  useEffect(()=>{if(receipt)window.scrollTo({top:0,behavior:'instant' as ScrollBehavior});},[receipt]);
  const q=useMemo(()=>{try{return quote(catalog,selection);}catch{return null;}},[catalog,selection]);
  const online=ready||isDemo,ig=instagramLinks(site.text.instagramHandle),hairPrep=site.text.policies.find(p=>p.id==='hair-prep');
- useEffect(()=>{if(step!==1||!online||!q)return;let active=true;const controller=new AbortController();setLoading(true);setError('');setSlots({});const total=getDaysInMonth(month),days=Array.from({length:total},(_,i)=>format(new Date(month.getFullYear(),month.getMonth(),i+1),'yyyy-MM-dd'));const today=format(new Date(),'yyyy-MM-dd');const last=format(new Date(Date.now()+60*86400000),'yyyy-MM-dd');const valid=days.filter(d=>d>=today&&d<=last);(async()=>{const result:Record<string,string[]>={};for(let i=0;i<valid.length;i+=5){await Promise.all(valid.slice(i,i+5).map(async d=>{if(isDemo){result[d]=demoSlots(d,q.duration);return;}const res=await fetch(`/api/availability?date=${d}&duration=${q.duration}`,{signal:controller.signal});const data=await res.json();if(!res.ok)throw new Error(data.error);result[d]=data.slots;}));}if(active){setSlots(result);setSlotsFor(format(month,'yyyy-MM'));}})().catch(e=>{if(active)setError(e.message||'Could not check availability.');}).finally(()=>{if(active)setLoading(false);});return()=>{active=false;controller.abort();};},[month,q,step,online]);
+ const [windowDays,setWindowDays]=useState(serverWindow);
+ useEffect(()=>{if(isDemo)setWindowDays(readDemoAvailability().rules.window_days);},[]);
+ // One request per month; the server works out every day's start times from her plan.
+ useEffect(()=>{if(step!==1||!online||!q)return;let active=true;const controller=new AbortController();setLoading(true);setError('');setSlots({});const key=format(month,'yyyy-MM');(async()=>{let result:Record<string,string[]>={};if(isDemo){const today=format(new Date(),'yyyy-MM-dd'),last=format(new Date(Date.now()+windowDays*86400000),'yyyy-MM-dd');for(let i=1;i<=getDaysInMonth(month);i++){const d=format(new Date(month.getFullYear(),month.getMonth(),i),'yyyy-MM-dd');if(d>=today&&d<=last)result[d]=demoSlots(d,q.duration);}}else{const res=await fetch(`/api/availability?month=${key}&duration=${q.duration}`,{signal:controller.signal});const data=await res.json();if(!res.ok)throw new Error(data.error);result=data.slots;}if(active){setSlots(result);setSlotsFor(key);}})().catch(e=>{if(active&&e.name!=='AbortError')setError(e.message||'Could not check availability.');}).finally(()=>{if(active)setLoading(false);});return()=>{active=false;controller.abort();};},[month,q,step,online,windowDays]);
  // Like Calendly: open on the first month with free times (within the booking window).
  const [autoJump,setAutoJump]=useState(true);
- const lastMonth=startOfMonth(new Date(Date.now()+60*86400000));
+ const lastMonth=startOfMonth(new Date(Date.now()+windowDays*86400000));
  const monthReady=slotsFor===format(month,'yyyy-MM')&&!loading,monthHasTimes=monthReady&&Object.values(slots).some(list=>list.length>0);
  useEffect(()=>{if(step!==1||!monthReady||!autoJump)return;if(monthHasTimes||month>=lastMonth){setAutoJump(false);return;}setMonth(addMonths(month,1));},[step,monthReady,autoJump,monthHasTimes,month,lastMonth]);
  function move(next:number){setStep(next);setError('');document.getElementById('booking-top')?.scrollIntoView({block:'start'});}
